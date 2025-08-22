@@ -79,6 +79,12 @@ python ed_ann_simple_v100.py --cpu
 
 # 詳細ログとリアルタイム表示を有効化
 python ed_ann_simple_v100.py --verbose --realtime
+
+# シード値を指定して再現可能な実行
+python ed_ann_simple_v100.py --seed 42
+
+# シード値を指定しない場合はランダム値が自動生成される
+python ed_ann_simple_v100.py  # 毎回異なるランダムシードで実行
 ```
 
 #### 学習モード選択
@@ -107,7 +113,7 @@ python ed_ann_simple_v100.py \
   --realtime \
   --verbose \
   --verify \
-  --random_seed 123
+  --seed 123
 ```
 
 ### カスタマイズオプション
@@ -131,9 +137,10 @@ python ed_ann_simple_v100.py \
 
 #### システム設定
 - `--cpu`: CPU強制使用（GPU自動判別を無効化）
-- `--random_seed`: ランダムシード（デフォルト: 42）
+- `--seed`: シード値（無指定時はランダム値）
 
 #### 使用例：
+
 ```bash
 # 全オプション指定例
 python ed_ann_simple_v100.py \
@@ -146,7 +153,7 @@ python ed_ann_simple_v100.py \
   --verbose \
   --verify \
   --cpu \
-  --random_seed 789
+  --seed 789
 ```
 
 ## ファイル構成

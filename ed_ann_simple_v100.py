@@ -1508,13 +1508,23 @@ def main():
     parser.add_argument('--hidden_size', type=int, default=64, help='隠れ層サイズ (default: 64)')
     parser.add_argument('--realtime', action='store_true', help='リアルタイム学習表示 (default: OFF)')
     parser.add_argument('--cpu', action='store_true', help='CPU強制使用 (default: 自動判別)')
-    parser.add_argument('--random_seed', type=int, default=42, help='ランダムシード (default: 42)')
+    parser.add_argument('--seed', type=int, help='シード値 (無指定時はランダム値)')
     parser.add_argument('--verbose', action='store_true', help='詳細ログ表示 (default: OFF)')
     parser.add_argument('--verify', action='store_true', help='精度検証機能(結果CSV書き出し) (default: OFF)')
     parser.add_argument('--mode', type=str, choices=['epoch', 'class', 'both'], 
                        default='epoch', help='学習モード選択 (default: epoch) (epoch=エポック単位、class=クラス単位、both=比較)')
     
     args = parser.parse_args()
+    
+    # シード値の決定（--seedが指定されなければランダム値を生成）
+    if args.seed is None:
+        import random
+        import time
+        random_seed = int(time.time() * 1000) % 10000  # 現在時刻からランダムシードを生成
+        print(f"🎲 ランダムシード: {random_seed} (自動生成)")
+    else:
+        random_seed = args.seed
+        print(f"🎯 ランダムシード: {random_seed} (指定値)")
     
     # verboseオプションに基づいてログ設定を初期化
     global logger, VERBOSE_MODE
@@ -1541,7 +1551,7 @@ def main():
         hidden_size=args.hidden_size,
         realtime=args.realtime,
         force_cpu=args.cpu,
-        random_seed=args.random_seed,
+        random_seed=random_seed,
         verbose=args.verbose,
         verify=args.verify
     )
