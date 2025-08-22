@@ -41,67 +41,82 @@ pip install torch torchvision matplotlib numpy
 
 ### 基本的な使用例
 
-```python
-import torch
-from ed_ann import MulticlassEDANN
+```bash
+# MNISTデータでの学習実行
+python ed_ann_simple_v100.py
+```
 
-# モデルの初期化
+プログラム内では以下のような構成になっています：
+
+```python
+# マルチクラスED-ANNモデルの初期化
 model = MulticlassEDANN(input_size=784, hidden_size=256, num_classes=10)
 
-# MNISTデータでの学習
-python train_mnist.py
+# MNIST学習の実行
+# - クラス別学習またはエポック順学習を選択可能
+# - 学習パラメータはコード内で設定
 ```
 
 ### オプション設定例
 
 #### クラス別学習モード
-```python
-# クラス別学習（各クラス順次学習）
-python train_mnist.py --learning_mode class_sequential --epochs 10
 
-# 学習率の調整
-python train_mnist.py --learning_rate 0.01 --batch_size 64
+```bash
+# ed_ann_simple_v100.py内で学習方式を設定
+# LEARNING_MODE = "class_sequential" に設定して実行
+python ed_ann_simple_v100.py
+
+# 学習パラメータの調整は、ファイル内の以下の変数を編集：
+# - LEARNING_RATE = 0.01
+# - BATCH_SIZE = 64
+# - NUM_EPOCHS = 10
 ```
 
 #### エポック順学習モード
-```python
-# エポック順学習（全クラス同時学習）
-python train_mnist.py --learning_mode epoch_based --epochs 20
 
-# 詳細ログ出力
-python train_mnist.py --verbose --save_logs
+```bash
+# ed_ann_simple_v100.py内で学習方式を設定
+# LEARNING_MODE = "epoch_based" に設定して実行
+python ed_ann_simple_v100.py
+
+# 詳細ログを有効にする場合は、ファイル内で：
+# VERBOSE_OUTPUT = True に設定
 ```
 
 #### 推論の実行
-```python
-# 学習済みモデルでの推論
-python inference.py --model_path saved_models/best_model.pth --input_image test_image.png
+
+```bash
+# 学習済みモデルでの推論を行う場合
+# ed_ann_simple_v100.py内でモデル保存・読み込み機能を使用
+python ed_ann_simple_v100.py
+
+# 推論結果は学習完了後に自動的に表示されます
 ```
 
 ### カスタマイズオプション
 
-- `--hidden_size`: 隠れ層のサイズ指定
-- `--learning_rate`: 学習率の設定
-- `--weight_decay`: 正則化パラメータ
-- `--save_interval`: モデル保存間隔
-- `--device`: 計算デバイス（cpu/cuda）の指定
+学習パラメータは`ed_ann_simple_v100.py`ファイル内で直接編集できます：
+
+- `HIDDEN_SIZE`: 隠れ層のサイズ指定
+- `LEARNING_RATE`: 学習率の設定
+- `WEIGHT_DECAY`: 正則化パラメータ
+- `NUM_EPOCHS`: 学習エポック数
+- `BATCH_SIZE`: バッチサイズ
+- `DEVICE`: 計算デバイス（'cpu' または 'cuda'）の指定
+- `LEARNING_MODE`: 学習方式（'class_sequential' または 'epoch_based'）
 
 ## ファイル構成
 
 ```
 ed-ann/
-├── README.md
-├── train_mnist.py          # MNIST学習スクリプト
-├── inference.py            # 推論スクリプト
-├── ed_ann/                 # メインモジュール
-│   ├── __init__.py
-│   ├── model.py           # マルチクラスED-ANNモデル
-│   ├── trainer.py         # 学習ロジック
-│   └── utils.py           # ユーティリティ関数
-├── examples/              # 使用例
-├── docs/                  # ドキュメント
-│   └── multiclass_ed_comprehensive_explanation.md
-└── tests/                 # テストコード
+├── README.md                           # このファイル
+├── ed_ann_simple_v100.py               # メインの実行ファイル
+└── docs/                               # ドキュメント
+    ├── multiclass_ed_comprehensive_explanation.md
+    ├── 通常のEDネットワーク例.png
+    ├── MNIST対応 マルチクラスEDネットワーク.png
+    ├── クラス別学習 学習順序.png
+    └── エポック順学習 学習順序.png
 ```
 
 ## 動作原理
