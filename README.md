@@ -42,68 +42,112 @@ pip install torch torchvision matplotlib numpy
 ### 基本的な使用例
 
 ```bash
-# MNISTデータでの学習実行
+# MNISTデータでの学習実行（デフォルト設定）
 python ed_ann_simple_v100.py
+
+# ヘルプオプションで利用可能なオプションを確認
+python ed_ann_simple_v100.py --help
+
+# 基本的なパラメータ調整例
+python ed_ann_simple_v100.py --epochs 5 --learning_rate 0.005 --batch_size 64
 ```
 
 プログラム内では以下のような構成になっています：
 
 ```python
 # マルチクラスED-ANNモデルの初期化
-model = MulticlassEDANN(input_size=784, hidden_size=256, num_classes=10)
+model = MulticlassEDANN(input_size=784, hidden_size=64, num_classes=10)
 
 # MNIST学習の実行
-# - クラス別学習またはエポック順学習を選択可能
-# - 学習パラメータはコード内で設定
+# - 学習モード（epoch/class/both）をコマンドラインで選択可能
+# - 各種パラメータはコマンドラインオプションで設定可能
 ```
 
 ### オプション設定例
 
-#### クラス別学習モード
+#### 基本的なパラメータ調整
 
 ```bash
-# ed_ann_simple_v100.py内で学習方式を設定
-# LEARNING_MODE = "class_sequential" に設定して実行
-python ed_ann_simple_v100.py
+# エポック数とバッチサイズを調整
+python ed_ann_simple_v100.py --epochs 10 --batch_size 128
 
-# 学習パラメータの調整は、ファイル内の以下の変数を編集：
-# - LEARNING_RATE = 0.01
-# - BATCH_SIZE = 64
-# - NUM_EPOCHS = 10
+# 学習率と隠れ層サイズを調整
+python ed_ann_simple_v100.py --learning_rate 0.005 --hidden_size 128
+
+# CPU強制使用での実行
+python ed_ann_simple_v100.py --cpu
+
+# 詳細ログとリアルタイム表示を有効化
+python ed_ann_simple_v100.py --verbose --realtime
 ```
 
-#### エポック順学習モード
+#### 学習モード選択
 
 ```bash
-# ed_ann_simple_v100.py内で学習方式を設定
-# LEARNING_MODE = "epoch_based" に設定して実行
-python ed_ann_simple_v100.py
+# エポック単位学習（デフォルト）
+python ed_ann_simple_v100.py --mode epoch
 
-# 詳細ログを有効にする場合は、ファイル内で：
-# VERBOSE_OUTPUT = True に設定
+# クラス単位学習
+python ed_ann_simple_v100.py --mode class
+
+# 両方のモードで比較実行
+python ed_ann_simple_v100.py --mode both
 ```
 
-#### 推論の実行
+#### 詳細な設定例
 
 ```bash
-# 学習済みモデルでの推論を行う場合
-# ed_ann_simple_v100.py内でモデル保存・読み込み機能を使用
-python ed_ann_simple_v100.py
-
-# 推論結果は学習完了後に自動的に表示されます
+# 全パラメータを指定した例
+python ed_ann_simple_v100.py \
+  --epochs 5 \
+  --learning_rate 0.008 \
+  --batch_size 64 \
+  --hidden_size 128 \
+  --mode both \
+  --realtime \
+  --verbose \
+  --verify \
+  --random_seed 123
 ```
 
 ### カスタマイズオプション
 
-学習パラメータは`ed_ann_simple_v100.py`ファイル内で直接編集できます：
+`ed_ann_simple_v100.py`では以下のコマンドラインオプションが利用可能です：
 
-- `HIDDEN_SIZE`: 隠れ層のサイズ指定
-- `LEARNING_RATE`: 学習率の設定
-- `WEIGHT_DECAY`: 正則化パラメータ
-- `NUM_EPOCHS`: 学習エポック数
-- `BATCH_SIZE`: バッチサイズ
-- `DEVICE`: 計算デバイス（'cpu' または 'cuda'）の指定
-- `LEARNING_MODE`: 学習方式（'class_sequential' または 'epoch_based'）
+#### 基本パラメータ
+- `--epochs`: 訓練エポック数（デフォルト: 3）
+- `--learning_rate`: 学習率（デフォルト: 0.01）  
+- `--batch_size`: バッチサイズ（デフォルト: 32）
+- `--hidden_size`: 隠れ層サイズ（デフォルト: 64）
+
+#### 実行モード・オプション
+- `--mode`: 学習モード選択（デフォルト: epoch）
+  - `epoch`: エポック単位学習
+  - `class`: クラス単位学習  
+  - `both`: 比較実行
+- `--realtime`: リアルタイム学習表示の有効化
+- `--verbose`: 詳細ログ表示の有効化
+- `--verify`: 精度検証機能（結果CSV書き出し）の有効化
+
+#### システム設定
+- `--cpu`: CPU強制使用（GPU自動判別を無効化）
+- `--random_seed`: ランダムシード（デフォルト: 42）
+
+#### 使用例：
+```bash
+# 全オプション指定例
+python ed_ann_simple_v100.py \
+  --epochs 10 \
+  --learning_rate 0.005 \
+  --batch_size 64 \
+  --hidden_size 128 \
+  --mode both \
+  --realtime \
+  --verbose \
+  --verify \
+  --cpu \
+  --random_seed 789
+```
 
 ## ファイル構成
 
