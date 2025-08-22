@@ -94,16 +94,26 @@ def setup_japanese_font():
         plt.rcParams['font.family'] = ['sans-serif']
         return 'default'
 
-# ログ設定
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler(f'ed_ann_v563_restored_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger(__name__)
+def setup_logging(verbose=False):
+    """ログ設定を初期化"""
+    handlers = [logging.StreamHandler()]
+    
+    if verbose:
+        # verboseが有効な場合のみログファイルを作成
+        log_filename = f'ed_ann_v563_restored_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log'
+        handlers.append(logging.FileHandler(log_filename))
+        print(f"📝 詳細ログファイル: {log_filename}")
+    
+    logging.basicConfig(
+        level=logging.INFO if verbose else logging.WARNING,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        handlers=handlers,
+        force=True  # 既存の設定を上書き
+    )
+    return logging.getLogger(__name__)
+
+# 初期ログ設定（一時的、main関数で再設定される）
+logger = setup_logging(verbose=False)
 
 # 日本語フォント初期化（ログ設定後）
 setup_japanese_font()
@@ -1506,6 +1516,11 @@ def main():
     
     args = parser.parse_args()
     
+    # verboseオプションに基づいてログ設定を初期化
+    global logger, VERBOSE_MODE
+    logger = setup_logging(verbose=args.verbose)
+    VERBOSE_MODE = args.verbose
+    
     # 学習開始メッセージ
     print("🚀 ED-ANN v5.6.4 - モデル・ハイパーパラメータ情報表示版")
     
@@ -1530,10 +1545,6 @@ def main():
         verbose=args.verbose,
         verify=args.verify
     )
-    
-    # グローバルVERBOSE_MODEを設定
-    global VERBOSE_MODE
-    VERBOSE_MODE = args.verbose
     
     # モデル構造とハイパーパラメータ情報を表示
     display_model_summary(config.hidden_size)
