@@ -1,46 +1,17 @@
 #!/usr/bin/env python3
 """
-ED-ANN v1.0.1 - グラフカスタマイゼーション機能追加版
+ED-ANN
+ED法を用いたANNネットワークのマルチクラス分類法
 
-🎯 ED-ANN (Error Diffusion Artificial Neural Network):
-純粋なED法による多クラス分類システム + リアルタイム可視化カスタマイゼーション
-Pure Multi-class classification using ED method with customizable visualization
+Multi-class classification using ED method
 
-✅ v1.0.1新機能:
-- グラフウィンドウサイズカスタマイゼーション: HyperParameters.graph_width/graph_height
-- ユーザー調整可能な可視化ウィンドウサイズ（デフォルト16×8インチ）
-- 型安全性向上: Optional型注釈による適切なパラメータ管理
-
-✅ 主要機能:
-- クラス単位学習: バイナリ分類 + クラス単位学習 (88.30%精度)
-- エポック単位学習: 標準マルチクラス + エポック単位学習 (89.40%精度、全クラス成功)
-- PyTorch標準Dataset/DataLoader完全統合
-
-🔬 ED法理論実装:
+ED法理論実装:
 1. Error Diffusion (誤差拡散): アミン濃度による学習制御
 2. Multi-class ED learning: 各クラスに対する個別誤差拡散
 3. Adaptive learning: アミン濃度に基づく適応的学習率調整
-4. Pure ANN implementation: SNNコンポーネント完全削除
 
-✅ v1.0.0新機能:
-1. モデル情報表示: TensorFlow model.summary()ライクな詳細モデル構造表示
-2. ハイパーパラメータ表示: HyperParametersクラス全項目の自動表示
-3. 実行開始時表示: 学習前にモデル構造とパラメータを確認可能
-4. 共通情報表示: クラス単位・エポック単位両モードで共通表示
-
-📊 性能実績（変更なし）:
-クラス単位学習 (バイナリ+クラス単位): 全体88.30%, 精度範囲28.50%, 成功9/10
-エポック単位学習 (マルチクラス+エポック): 全体89.40%, 精度範囲16.56%, 成功10/10
-
-🚀 実行方法:
---mode epoch: エポック単位学習
---mode class: クラス単位学習  
---mode both: 両手法比較
---realtime: リアルタイム可視化（エポック単位・クラス単位対応）
-
-🌍 英語表記: "Multi-class classification using ED method"
-🎯 システム: Pure ED-ANN + Detailed Model Information Display
-完成日: 2025-08-17
+v1.0.0
+発行日: 2025-08-23
 """
 
 import torch
