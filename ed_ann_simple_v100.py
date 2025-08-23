@@ -158,10 +158,6 @@ class HyperParameters:
     # アミン濃度制御
     amine_threshold: float = 0.5        # アミン濃度閾値（学習判定基準）
     concentration_decay: float = 0.99   # 濃度減衰率（時間経過による減衰）
-    
-    # クラス別学習制御
-    class_learning_balance: bool = True  # クラス間学習バランス調整
-    adaptive_rate: bool = False         # 適応的学習率（実験的機能）
 
 class MultiClassSingleOutputEDDense(nn.Module):
     """
@@ -1698,10 +1694,6 @@ def display_hyperparameters():
     print("\nアミン濃度制御:")
     print(f"   amine_threshold: float = {hp.amine_threshold}        # アミン濃度閾値（学習判定基準）")
     print(f"   concentration_decay: float = {hp.concentration_decay}   # 濃度減衰率（時間経過による減衰）")
-    
-    print("\nクラス別学習制御:")
-    print(f"   class_learning_balance: bool = {hp.class_learning_balance}  # クラス間学習バランス調整")
-    print(f"   adaptive_rate: bool = {hp.adaptive_rate}         # 適応的学習率（実験的機能）")
     
     print("="*80)
 
