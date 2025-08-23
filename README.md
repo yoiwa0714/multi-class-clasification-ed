@@ -8,6 +8,7 @@
 **バージョン**: v1.0.0 - パラメータクリーンアップ完了版
 - 実際に機能するパラメータのみを表示するように整理
 - 未実装パラメータを削除してユーザー体験を向上
+- リアルタイム学習表示機能の実行結果サンプルを追加
 
 ## 特徴
 
@@ -161,7 +162,6 @@ python ed_ann_simple_v100.py \
 - モデル構造情報に続いて、ED法ハイパーパラメータの設定値が表示されます。
   - ED法ハイパーパラメータの内、コマンドラインオプションで指定できるのはlearning_rateのみです。その他のED法ハイパーパラメータを調整するためにはコードを直接編集する必要があります。
   - ED法ハイパーパラメータはclass HyperParametersにまとめて記述されています。class HyperParametersはed_ann_simple_v100.pyの140行目辺りに配置されています。
-  - v1.0.0では、実際に実装されていないパラメータを削除し、機能するパラメータのみを表示するようになりました。現在のED法理論パラメータは`d_plus`（正答時のアミン濃度増加量）と`d_minus`（誤答時のアミン濃度減少量）の2つです。
 
 ## ファイル構成
 
@@ -169,6 +169,9 @@ python ed_ann_simple_v100.py \
 ed-ann/
 ├── README.md                           # このファイル
 ├── ed_ann_simple_v100.py               # メインの実行ファイル
+├── ed-ann-epoch-based-training-result.png  # 実行結果のサンプル画像
+├── data/                               # データディレクトリ
+│   └── MNIST/                          # MNISTデータセット保存場所
 └── docs/                               # ドキュメント
     ├── multiclass_ed_comprehensive_explanation.md
     ├── 通常のEDネットワーク例.png
@@ -197,6 +200,18 @@ ed-ann/
 ## 実験結果
 
 MNISTデータセットでの実験により、現在主流の手法と同等以上の分類精度を達成しています。
+
+### リアルタイム学習表示の例
+
+以下は`--realtime`オプションを使用した学習過程の可視化結果です：
+
+```bash
+python ed_ann_simple_v100.py --train_size 1000 --test_size 1000 --epochs 10 --realtime
+```
+
+![リアルタイム学習結果表示](ed-ann-epoch-based-training-result.png)
+
+*グラフ説明: 上段は精度の推移（訓練・テスト）、下段は損失の推移を示しています。*
 
 ## ライセンス
 
