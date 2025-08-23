@@ -150,7 +150,6 @@ class HyperParameters:
     
     # 学習率関連
     base_learning_rate: float = 0.01    # 基本学習率（Adam optimizer用）
-    ed_learning_rate: float = 0.001     # ED法専用学習率（重み更新制御）
     
     # 重み更新制御
     weight_decay: float = 1e-5          # 重み減衰（過学習防止）
@@ -1695,7 +1694,6 @@ def display_hyperparameters():
     
     print("\n学習率関連:")
     print(f"   base_learning_rate: float = {hp.base_learning_rate}    # 基本学習率（Adam optimizer用）")
-    print(f"   ed_learning_rate: float = {hp.ed_learning_rate}     # ED法専用学習率（重み更新制御）")
     
     print("\n重み更新制御:")
     print(f"   weight_decay: float = {hp.weight_decay}          # 重み減衰（過学習防止）")

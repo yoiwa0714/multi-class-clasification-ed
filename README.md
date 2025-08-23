@@ -150,24 +150,13 @@ python ed_ann_simple_v100.py \
 - `--cpu`: CPU強制使用（GPU自動判別を無効化）
 - `--seed`: シード値（無指定時はランダム値）
 
-#### 使用例：
+#### コードに関する補足
 
-```bash
-# 全オプション指定例
-python ed_ann_simple_v100.py \
-  --epochs 10 \
-  --learning_rate 0.005 \
-  --batch_size 64 \
-  --hidden_size 128 \
-  --train_size 1500 \
-  --test_size 300 \
-  --mode both \
-  --realtime \
-  --verbose \
-  --verify \
-  --cpu \
-  --seed 789
-```
+- 現在の実装では、隠れ層は1層のみの構成となります。
+- 実行開始時に、model.summary風のモデル構造情報が表示されます。
+- モデル構造情報に続いて、ED法ハイパーパラメータの設定値が表示されます。
+  - ED法ハイパーパラメータの内、コマンドラインオプションで指定できるのはlearning_rateのみです。その他のED法ハイパーパラメータを調整するためにはコードを直接編集する必要があります。
+  - ED法ハイパーパラメータはclass HyperParametersにまとめて記述されています。class HyperParametersはed_ann_simple_v100.pyの140行目辺りに配置されています。
 
 ## ファイル構成
 
@@ -199,10 +188,6 @@ ed-ann/
   - クラスデータは、各正解ラベルが約10%ずつを占める、通常の学習用データです。
 
 詳細な原理説明は[docs/multiclass_ed_comprehensive_explanation.md](docs/multiclass_ed_comprehensive_explanation.md)をご参照ください。
-
-### 隠れ層
-
-- 現在の実装では、隠れ層は1層のみの構成となります。
 
 ## 実験結果
 
