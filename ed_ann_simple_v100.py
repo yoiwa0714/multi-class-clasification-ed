@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ED-ANN v5.6.4 - モデル・ハイパーパラメータ情報表示版
+ED-ANN v1.0.0 - モデル・ハイパーパラメータ情報表示版
 
 🎯 ED-ANN (Error Diffusion Artificial Neural Network):
 純粋なED法による多クラス分類システム + 詳細情報表示強化
@@ -17,7 +17,7 @@ Pure Multi-class classification using ED method with detailed model info
 3. Adaptive learning: アミン濃度に基づく適応的学習率調整
 4. Pure ANN implementation: SNNコンポーネント完全削除
 
-✅ v5.6.4新機能:
+✅ v1.0.0新機能:
 1. モデル情報表示: TensorFlow model.summary()ライクな詳細モデル構造表示
 2. ハイパーパラメータ表示: HyperParametersクラス全項目の自動表示
 3. 実行開始時表示: 学習前にモデル構造とパラメータを確認可能
@@ -749,7 +749,7 @@ class EpochBasedTrainer:
         plt.rcParams['font.family'] = ['Noto Sans CJK JP', 'Yu Gothic', 'Noto Sans JP', 'sans-serif']
         
         self.multiclass_fig, (self.acc_ax, self.loss_ax) = plt.subplots(1, 2, figsize=(16, 8))
-        self.multiclass_fig.suptitle('ED-ANN v5.6.4 エポック単位学習進捗', fontsize=16, fontweight='bold')
+        self.multiclass_fig.suptitle('ED-ANN v1.0.0 エポック単位学習進捗', fontsize=16, fontweight='bold')
         
         # 精度グラフ設定（左）
         self.acc_ax.set_title('精度 (Accuracy)', fontsize=14, fontweight='bold')
@@ -1501,7 +1501,7 @@ class RestoredTrainer:
 
 def main():
     """Phase 1 & Phase 2 比較実行メイン関数"""
-    parser = argparse.ArgumentParser(description='ED-ANN v5.6.4 - モデル・ハイパーパラメータ情報表示版')
+    parser = argparse.ArgumentParser(description='ED-ANN v1.0.0 - モデル・ハイパーパラメータ情報表示版')
     parser.add_argument('--epochs', type=int, default=3, help='訓練エポック数 (default: 3)')
     parser.add_argument('--learning_rate', type=float, default=0.01, help='学習率 (default: 0.01)')
     parser.add_argument('--batch_size', type=int, default=32, help='バッチサイズ (default: 32)')
@@ -1534,7 +1534,7 @@ def main():
     VERBOSE_MODE = args.verbose
     
     # 学習開始メッセージ
-    print("🚀 ED-ANN v5.6.4 - モデル・ハイパーパラメータ情報表示版")
+    print("🚀 ED-ANN v1.0.0 - モデル・ハイパーパラメータ情報表示版")
     
     # 精度検証機能使用時のエポック数チェック
     if args.verify and args.epochs < 5:
