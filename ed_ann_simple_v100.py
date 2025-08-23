@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """
-ED-ANN v1.0.0 - モデル・ハイパーパラメータ情報表示版
+ED-ANN v1.0.1 - グラフカスタマイゼーション機能追加版
 
 🎯 ED-ANN (Error Diffusion Artificial Neural Network):
-純粋なED法による多クラス分類システム + 詳細情報表示強化
-Pure Multi-class classification using ED method with detailed model info
+純粋なED法による多クラス分類システム + リアルタイム可視化カスタマイゼーション
+Pure Multi-class classification using ED method with customizable visualization
+
+✅ v1.0.1新機能:
+- グラフウィンドウサイズカスタマイゼーション: HyperParameters.graph_width/graph_height
+- ユーザー調整可能な可視化ウィンドウサイズ（デフォルト16×8インチ）
+- 型安全性向上: Optional型注釈による適切なパラメータ管理
 
 ✅ 主要機能:
 - クラス単位学習: バイナリ分類 + クラス単位学習 (88.30%精度)
@@ -150,6 +155,10 @@ class HyperParameters:
     
     # 学習率関連
     base_learning_rate: float = 0.01    # 基本学習率（Adam optimizer用）
+    
+    # 可視化設定
+    graph_width: float = 12.0   # リアルタイムグラフの幅（インチ）
+    graph_height: float = 6.0   # リアルタイムグラフの高さ（インチ）
 
 class MultiClassSingleOutputEDDense(nn.Module):
     """
@@ -466,8 +475,9 @@ class EpochBasedTrainer:
     全クラス同時学習による標準マルチクラス分類実装
     """
     
-    def __init__(self, config: TrainingConfig):
+    def __init__(self, config: TrainingConfig, hyperparams: Optional[HyperParameters] = None):
         self.config = config
+        self.hyperparams = hyperparams if hyperparams is not None else HyperParameters()
         
         # デバイス決定（CPU強制オプション考慮）
         if config.force_cpu:
@@ -731,8 +741,11 @@ class EpochBasedTrainer:
         # 日本語フォント設定確認
         plt.rcParams['font.family'] = ['Noto Sans CJK JP', 'Yu Gothic', 'Noto Sans JP', 'sans-serif']
         
-        self.multiclass_fig, (self.acc_ax, self.loss_ax) = plt.subplots(1, 2, figsize=(16, 8))
-        self.multiclass_fig.suptitle('ED-ANN v1.0.0 エポック単位学習進捗', fontsize=16, fontweight='bold')
+        # グラフウィンドウサイズ（HyperParametersから取得）
+        graph_width = self.hyperparams.graph_width
+        graph_height = self.hyperparams.graph_height  
+        self.multiclass_fig, (self.acc_ax, self.loss_ax) = plt.subplots(1, 2, figsize=(graph_width, graph_height))
+        self.multiclass_fig.suptitle('ED-ANN v1.0.1 エポック単位学習進捗', fontsize=16, fontweight='bold')
         
         # 精度グラフ設定（左）
         self.acc_ax.set_title('精度 (Accuracy)', fontsize=14, fontweight='bold')
@@ -829,8 +842,9 @@ class RestoredTrainer:
     バイナリ分類方式による各クラス分類器の独立学習
     """
     
-    def __init__(self, config: TrainingConfig):
+    def __init__(self, config: TrainingConfig, hyperparams: Optional[HyperParameters] = None):
         self.config = config
+        self.hyperparams = hyperparams if hyperparams is not None else HyperParameters()
         
         # デバイス決定（CPU強制オプション考慮）
         if config.force_cpu:
@@ -1040,11 +1054,11 @@ class RestoredTrainer:
         # 動的タイトル更新（統合評価開始後はスキップ）
         evaluation_started = getattr(self, '_evaluation_started', False)
         if not evaluation_started:
-            title = f"ED-ANN v5.6.2 マルチクラス学習進捗　　クラス {class_idx} を学習中"
+            title = f"ED-ANN v1.0.1 マルチクラス学習進捗　　クラス {class_idx} を学習中"
             self.multiclass_fig.suptitle(title, fontsize=16, fontweight='bold')
         else:
             # 統合評価開始済みの場合は「全体の精度とLossを計算中」に更新
-            title = "ED-ANN v5.6.2 マルチクラス学習進捗　　全体の精度とLossを計算中"
+            title = "ED-ANN v1.0.1 マルチクラス学習進捗　　全体の精度とLossを計算中"
             self.multiclass_fig.suptitle(title, fontsize=16, fontweight='bold')
         
         # クラス別データ蓄積用の初期化
@@ -1193,7 +1207,7 @@ class RestoredTrainer:
         
         # プロット完了後、タイトルをメインタイトルのみに変更
         if hasattr(self, 'multiclass_fig') and self.multiclass_fig:
-            title = "ED-ANN v5.6.2 マルチクラス学習進捗"  # メインタイトルのみ
+            title = "ED-ANN v1.0.1 マルチクラス学習進捗"  # メインタイトルのみ
             self.multiclass_fig.suptitle(title, fontsize=16, fontweight='bold')
             plt.draw()  # 即座に描画更新
             plt.pause(0.1)  # タイトル更新を表示
@@ -1324,8 +1338,11 @@ class RestoredTrainer:
         # 日本語フォント設定確認（ED-ANN仕様準拠）- 警告なしフォントのみ
         plt.rcParams['font.family'] = ['Noto Sans CJK JP', 'Yu Gothic', 'Noto Sans JP', 'sans-serif']
         
-        self.multiclass_fig, (self.acc_ax, self.loss_ax) = plt.subplots(1, 2, figsize=(16, 8))
-        self.multiclass_fig.suptitle('ED-ANN v5.6.2 マルチクラス学習進捗', fontsize=16, fontweight='bold')
+        # グラフウィンドウサイズ（HyperParametersから取得）  
+        graph_width = self.hyperparams.graph_width
+        graph_height = self.hyperparams.graph_height
+        self.multiclass_fig, (self.acc_ax, self.loss_ax) = plt.subplots(1, 2, figsize=(graph_width, graph_height))
+        self.multiclass_fig.suptitle('ED-ANN v1.0.1 マルチクラス学習進捗', fontsize=16, fontweight='bold')
         
         # 精度グラフ設定（左）
         self.acc_ax.set_title('精度 (Accuracy)', fontsize=14, fontweight='bold')
@@ -1517,7 +1534,7 @@ def main():
     VERBOSE_MODE = args.verbose
     
     # 学習開始メッセージ
-    print("🚀 ED-ANN v1.0.0 - モデル・ハイパーパラメータ情報表示版")
+    print("🚀 ED-ANN v1.0.1 - グラフカスタマイゼーション機能追加版")
     
     # 精度検証機能使用時のエポック数チェック
     if args.verify and args.epochs < 5:
@@ -1547,6 +1564,9 @@ def main():
     display_model_summary(config.hidden_size)
     display_hyperparameters()
     
+    # HyperParametersインスタンスを作成
+    hyperparams = HyperParameters()
+    
     results = {}
     
     # クラス単位学習
@@ -1555,7 +1575,7 @@ def main():
         print("🎯 クラス単位学習実行")
         print("="*60)
         
-        trainer_p1 = RestoredTrainer(config)
+        trainer_p1 = RestoredTrainer(config, hyperparams)
         trainer_p1.initialize_classifiers()
         
         # リアルタイム可視化（Phase 1のみ）
@@ -1587,7 +1607,7 @@ def main():
         print("🔄 エポック単位学習実行")  
         print("="*60)
         
-        trainer_p2 = EpochBasedTrainer(config)
+        trainer_p2 = EpochBasedTrainer(config, hyperparams)
         p2_results = trainer_p2.train_epoch_based()
         results['epoch'] = p2_results
         
