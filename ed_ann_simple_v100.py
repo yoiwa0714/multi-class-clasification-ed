@@ -1506,6 +1506,8 @@ def main():
     parser.add_argument('--learning_rate', type=float, default=0.01, help='学習率 (default: 0.01)')
     parser.add_argument('--batch_size', type=int, default=32, help='バッチサイズ (default: 32)')
     parser.add_argument('--hidden_size', type=int, default=64, help='隠れ層サイズ (default: 64)')
+    parser.add_argument('--train_size', type=int, default=1000, help='クラス別訓練データ数 (default: 1000)')
+    parser.add_argument('--test_size', type=int, default=1000, help='クラス別テストデータ数 (default: 1000)')
     parser.add_argument('--realtime', action='store_true', help='リアルタイム学習表示 (default: OFF)')
     parser.add_argument('--cpu', action='store_true', help='CPU強制使用 (default: 自動判別)')
     parser.add_argument('--seed', type=int, help='シード値 (無指定時はランダム値)')
@@ -1549,6 +1551,8 @@ def main():
         learning_rate=args.learning_rate,
         batch_size=args.batch_size,
         hidden_size=args.hidden_size,
+        train_samples_per_class=args.train_size,
+        test_samples_per_class=args.test_size,
         realtime=args.realtime,
         force_cpu=args.cpu,
         random_seed=random_seed,
