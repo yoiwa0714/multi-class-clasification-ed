@@ -155,10 +155,6 @@ class HyperParameters:
     weight_decay: float = 1e-5          # 重み減衰（過学習防止）
     momentum: float = 0.9               # モーメンタム（学習安定性向上）
     
-    # ED法特有制約
-    preserve_sign: bool = True          # 重み符号保持（ED法核心制約）
-    abs_increase_only: bool = True      # 絶対値増加のみ許可
-    
     # アミン濃度制御
     amine_threshold: float = 0.5        # アミン濃度閾値（学習判定基準）
     concentration_decay: float = 0.99   # 濃度減衰率（時間経過による減衰）
@@ -1698,10 +1694,6 @@ def display_hyperparameters():
     print("\n重み更新制御:")
     print(f"   weight_decay: float = {hp.weight_decay}          # 重み減衰（過学習防止）")
     print(f"   momentum: float = {hp.momentum}               # モーメンタム（学習安定性向上）")
-    
-    print("\nED法特有制約:")
-    print(f"   preserve_sign: bool = {hp.preserve_sign}          # 重み符号保持（ED法核心制約）")
-    print(f"   abs_increase_only: bool = {hp.abs_increase_only}      # 絶対値増加のみ許可")
     
     print("\nアミン濃度制御:")
     print(f"   amine_threshold: float = {hp.amine_threshold}        # アミン濃度閾値（学習判定基準）")
