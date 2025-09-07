@@ -27,6 +27,15 @@ Python実装となっています。MNIST/Fashion-MNISTデータセットでの�
 
 ## クイックスタート
 
+### 0. リポジトリのクローン
+
+```bash
+# リポジトリをクローン
+git clone https://github.com/yoiwa0714/multi-class-clasification-ed
+cd multi-class-clasification-ed
+```
+
+
 ### 1. 依存関係のインストール
 
 ```bash
