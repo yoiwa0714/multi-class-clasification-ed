@@ -116,7 +116,7 @@ class EDNetworkMNIST(EDGenuine):
         import sys
         import os
         sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-        from ed_v017_simple import LearningResultsBuffer
+        from multi_ed_v020 import LearningResultsBuffer
         results_buffer = LearningResultsBuffer(len(train_inputs), len(test_inputs), epochs)
         
         # リアルタイム可視化設定（学習開始時点で表示）
@@ -125,7 +125,7 @@ class EDNetworkMNIST(EDGenuine):
         if enable_visualization and HAS_VISUALIZATION:
             print("🎨 リアルタイム可視化準備中...")
             # NOTE: 可視化クラスは別モジュールから取得する必要がある
-            from ed_v017_simple import RealtimeLearningVisualizer, RealtimeConfusionMatrixVisualizer
+            from multi_ed_v020 import RealtimeLearningVisualizer, RealtimeConfusionMatrixVisualizer
             visualizer = RealtimeLearningVisualizer(max_epochs=epochs, save_dir=getattr(self.hyperparams, 'save_fig', None))
             visualizer.setup_plots()
             
