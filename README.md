@@ -3,14 +3,14 @@
 ## 概要
 
 本プロジェクトは、**金子勇氏**が1999年に開発された**Error Diffusion（ED）学習アルゴリズム**
-に基づくマルチクラス分類システムの完全実装です。`ed_genuine.prompt.md`の理論仕様に100%準拠し、
+に基づくマルチクラス分類システムの完全実装です。[`ed_genuine.prompt.md`](ed_genuine.prompt.md)の理論仕様に100%準拠し、
 金子氏のC言語ソースコードパターン`pat[5]: One-Hot符号化(マルチクラス用)`を忠実に再現した
 Python実装となっています。MNIST/Fashion-MNISTデータセットでの高精度マルチクラス分類を実現します。
 
 ## 主要特徴
 
 ### ✅ 理論準拠性
-- **100% ed_genuine.prompt.md準拠**: 金子氏の原理論の完全実装
+- **100% [ed_genuine.prompt.md](ed_genuine.prompt.md)準拠**: 金子氏の原理論の完全実装
 - **統一誤差計算**: ED法 `abs(teacher-output)` による一貫した誤差処理
 - **独立出力ニューロン構造**: 各出力ニューロンが独自の重み空間を維持
 
@@ -131,7 +131,7 @@ modules/
 ## 実験結果と検証
 
 ### 理論準拠性検証
-- ✅ `ed_genuine.prompt.md`仕様との100%一致確認済み
+- ✅ [`ed_genuine.prompt.md`](ed_genuine.prompt.md)仕様との100%一致確認済み
 - ✅ 金子氏原論文の数式との整合性検証完了
 - ✅ 独立出力ニューロン構造の正確な実装確認
 
@@ -149,7 +149,7 @@ modules/
 ```
 multi_ed_v020.py          # メインプログラム（524行）
 requirements.txt          # 依存関係管理（58行）
-ed_genuine.prompt.md      # 理論的背景（377行）
+[ed_genuine.prompt.md](ed_genuine.prompt.md)      # 理論的背景（377行）
 README.md                 # プロジェクト概要（本ファイル）
 modules/                  # コアモジュール群（総計3,190行）
 └── [各種実装モジュール]
@@ -199,6 +199,6 @@ Error Diffusion学習アルゴリズムの先駆的研究と、`pat[5]`マルチ
 
 ---
 
-**注意**: 本実装は`ed_genuine.prompt.md`の詳細な理論仕様と金子氏のオリジナルCコードの
-研究に基づいています。研究者の皆様には、完全な理論的理解のため、`ed_genuine.prompt.md`と
+**注意**: 本実装は[`ed_genuine.prompt.md`](ed_genuine.prompt.md)の詳細な理論仕様と金子氏のオリジナルCコードの
+研究に基づいています。研究者の皆様には、完全な理論的理解のため、[`ed_genuine.prompt.md`](ed_genuine.prompt.md)と
 オリジナルのソース資料も参照されることをお勧めします。
