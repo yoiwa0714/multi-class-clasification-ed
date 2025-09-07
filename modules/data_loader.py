@@ -1,6 +1,7 @@
 """
-data_loader.py - ED法用データローダーモジュール
-ed_genuine.prompt.md準拠の実装
+data_loader.py
+純正ED法（Error Diffusion Learning Algorithm）Python実装 v0.2.0
+Original C implementation by Isamu Kaneko (1999)
 """
 
 import numpy as np

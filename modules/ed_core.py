@@ -1,12 +1,7 @@
 """
-ED-Genuine 核心アルゴリズム実装
-金子勇氏のError Diffusion Learning Algorithm C実装 pat[5] 準拠
-
-このモジュールには以下が含まれます:
-- class EDGenuine: ED法の核心アルゴリズム実装
-- アミン拡散による学習制御
-- 興奮性・抑制性ニューロンペア構造
-- 独立出力ニューロンアーキテクチャ
+ed_core.py
+純正ED法（Error Diffusion Learning Algorithm）Python実装 v0.2.0
+Original C implementation by Isamu Kaneko (1999)
 """
 
 import numpy as np

@@ -179,6 +179,19 @@ requirements.txt          # 依存関係管理（58行）
 README.md                 # プロジェクト概要（本ファイル）
 modules/                  # コアモジュール群（総計3,190行）
 └── [各種実装モジュール]
+images/                   # 実験結果可視化
+├── realtime-sample.png   # 精度と誤差グラフ
+└── confusion-realtime.png # 混同行列グラフ
+original-c-source-code/   # 金子勇氏オリジナルCソースコード
+├── main.c, neuro.c等     # 核心アルゴリズム実装
+└── makefile              # コンパイル設定
+```
+multi_ed_v020.py          # メインプログラム（524行）
+requirements.txt          # 依存関係管理（58行）
+[ed_genuine.prompt.md](ed_genuine.prompt.md)      # 理論的背景（377行）
+README.md                 # プロジェクト概要（本ファイル）
+modules/                  # コアモジュール群（総計3,190行）
+└── [各種実装モジュール]
 ```
 
 ## 依存関係

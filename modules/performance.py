@@ -1,12 +1,7 @@
 """
-パフォーマンス関連モジュール
-ED法SNN実装のパフォーマンス最適化とプロファイリング機能
-
-ed_v017.pyからTrainingProfiler/LearningResultsBufferを切り出し
-ed_genuine.prompt.md準拠の実装
-
-Original Algorithm: 金子勇 (1999)
-Implementation: ed_genuine.prompt.md compliance
+performance.py
+純正ED法（Error Diffusion Learning Algorithm）Python実装 v0.2.0
+Original C implementation by Isamu Kaneko (1999)
 """
 
 import numpy as np

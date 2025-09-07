@@ -1,13 +1,7 @@
 """
-ED-Genuine MNIST専用ネットワーククラス
-Isamu Kaneko's Error Diffusion Learning Algorithm implementation
-Based on C code pat[5]: One-Hot encoding for multi-class classification
-
-【ed_genuine.prompt.md 準拠実装】
-- MNIST/Fashion-MNIST データセット専用拡張
-- 独立出力ニューロンアーキテクチャ 
-- ハイパーパラメータ制御対応
-- リアルタイム可視化機能
+network_mnist.py
+純正ED法（Error Diffusion Learning Algorithm）Python実装 v0.2.0
+Original C implementation by Isamu Kaneko (1999)
 """
 
 import numpy as np
