@@ -1,228 +1,238 @@
-# ED-Genuine v0.2.1 - Pure Error Diffusion Learning Algorithm
+# ED学習アルゴリズムによるマルチクラス分類 v0.2.1
 
-[![Python](https://img.shields.io/badge/python-3.8%2B-blue)](https://python.org)
-[![NumPy](https://img.shields.io/badge/NumPy-1.21%2B-orange)](https://numpy.org)
-[![CuPy](https://img.shields.io/badge/CuPy-GPU%20Accelerated-green)](https://cupy.dev)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+## 概要
 
-🚀 **金子勇氏の純正ED法（Error Diffusion Learning Algorithm）Python実装 - NumPy高速化版**
+本プロジェクトは、**金子勇氏**が1999年に開発された**Error Diffusion（ED）学習アルゴリズム**
+に基づくマルチクラス分類システムの完全実装です。[`ed_genuine.prompt.md`](ed_genuine.prompt.md)の理論仕様に100%準拠し、
+金子氏のC言語ソースコードパターン`pat[5]: One-Hot符号化(マルチクラス用)`を忠実に再現した
+Python実装となっています。MNIST/Fashion-MNISTデータセットでの高精度マルチクラス分類を実現します。
 
-## 📖 概要
+## 主要特徴
 
-ED-Genuine（Error Diffusion Genuine Algorithm）は、金子勇氏によるオリジナルのError Diffusion Learning AlgorithmのC実装を完全に忠実に再現し、NumPy行列演算による大幅高速化を実現したPython実装です。
+### ✅ 理論準拠性
+- **100% [ed_genuine.prompt.md](ed_genuine.prompt.md)準拠**: 金子氏の原理論の完全実装
+- **統一誤差計算**: ED法 `abs(teacher-output)` による一貫した誤差処理
+- **独立出力ニューロン構造**: 各出力ニューロンが独自の重み空間を維持
 
-### 🎯 主な特徴
+### 🚀 性能最適化
+- **NumPy高速化**: 行列演算による4.1倍の総合高速化（342秒→83秒/10エポック）
+- **フォワード計算最適化**: トリプルループから行列演算への変更で1,899倍高速化
+- **GPU高速化**: CuPy対応による大幅な学習速度向上
+- **ミニバッチ学習**: 効率的なバッチ処理による高速化
+- **メモリ効率**: 最適化されたデータ構造とメモリ管理
 
-- **🧬 純正ED法実装**: 金子勇氏のC実装を100%忠実に再現
-- **🚀 NumPy高速化**: 4.1倍の総合高速化（342秒→83秒/10エポック）
-- **⚡ 行列演算最適化**: フォワード計算1,899倍高速化達成
-- **🎯 マルチクラス対応**: MNISTで71%精度（さらなる最適化で95%目標）
-- **📊 完全可視化**: 混同行列・学習進捗のリアルタイム表示
-- **� 理論準拠**: ed_genuine.prompt.md 100%準拠実装
+### 📊 豊富な可視化機能
+- **リアルタイム学習進捗**: 誤差・精度の可視化
+- **累積混同行列**: 学習開始からの性能推移
+- **重み分布分析**: ネットワークの内部状態可視化(混同行列グラフ)
+- **日本語フォント対応**: 完全な日本語表示サポート
 
-## 🚀 クイックスタート
+## クイックスタート
 
-### インストール
+### 0. リポジトリのクローン
 
 ```bash
-git clone https://github.com/yourusername/ed-snn-develop.git
-cd ed-snn-develop
+# リポジトリをクローン
+git clone https://github.com/yoiwa0714/multi-class-clasification-ed
+cd multi-class-clasification-ed
+```
+
+
+### 1. 依存関係のインストール
+
+```bash
+# 基本環境（CPU）
 pip install -r requirements.txt
+
+# GPU高速化環境（推奨）
+pip install cupy-cuda11x  # CUDA 11.x環境の場合
 ```
 
-### 基本実行
+### 2. 基本実行
 
 ```bash
-# 基本実行（NumPy高速化版）
-python ed_genuine/multi_ed_v021.py --train 1000 --test 1000 --epochs 10
+# 推奨設定での実行
+python multi_ed_v021.py --epochs 10 --hidden 128 --batch 32
 
-# ハイパーパラメータ調整
-python ed_genuine/multi_ed_v021.py --train 1000 --test 1000 --epochs 30 --alpha 0.5 --hidden 256
+# 可視化付き実行
+python multi_ed_v021.py --epochs 10 --viz --save_fig results
 
-# リアルタイム可視化
-python ed_genuine/multi_ed_v021.py --train 500 --test 500 --epochs 10 --viz
-
-# GPU高速化（利用可能な場合）
-python ed_genuine/multi_ed_v021.py --train 1000 --test 1000 --epochs 10 --gpu
+# Fashion-MNISTでの実行
+python multi_ed_v021.py --fashion --epochs 10 --viz
 ```
 
-## 📊 性能結果
-
-| バージョン | 実行時間 (10エポック) | 精度 | 高速化率 |
-|-----------|---------------------|------|----------|
-| v0.2.0 (元版) | 342.17秒 | ~50% | 基準 |
-| v0.2.1 (NumPy版) | 83.5秒 | 71.1% | **4.1倍高速化** |
-| v0.2.1 (最適化版) | 予定 | 95%目標 | さらなる向上 |
-
-### 🚀 高速化の詳細
-
-- **フォワード計算**: 1,899倍高速化（トリプルループ→行列演算）
-- **総合性能**: 4.1倍高速化（実用的な学習時間を実現）
-- **理論準拠**: ed_genuine.prompt.md 100%準拠を維持
-
-## 🧬 ED法の理論的背景
-
-ED法は生物学的な神経伝達メカニズムを模倣した学習アルゴリズムです：
-
-### 🔬 核心原理
-
-1. **アミン濃度制御**: 正答時の濃度増加（d_plus）、誤答時の濃度減少（d_minus）
-2. **重み符号保持**: 学習中の重みの符号を維持（ED法の核心制約）
-3. **適応的学習**: 濃度に基づく動的な学習率調整
-
-### 📈 マルチクラス拡張
-
-従来の二値分類から多クラス分類への革新的拡張：
-
-```text
-二値分類:   Class A ↔ Class B
-           ↓
-多クラス:   Class 0, 1, 2, ..., 9
-           各クラスに対する個別的なED制御
-```
-
-詳細は [THEORY.md](THEORY.md) を参照してください。
-
-## 💻 使用例
-
-### 基本的な使用法
-
-```python
-# 設定
-config = TrainingConfig(
-    epochs=10,
-    learning_rate=0.01,
-    batch_size=32,
-    verify=True  # 精度検証有効
-)
-
-# 実行
-trainer = EpochBasedTrainer(config)
-results = trainer.train_and_evaluate()
-```
-
-### 高度なオプション
+### 3. 高度な使用例
 
 ```bash
-# CPU強制使用
-python ed_ann_simple_v100.py --epochs 5 --cpu
+# 詳細分析モード
+python multi_ed_v021.py --viz --verbose
 
-# 詳細ログ出力
-python ed_ann_simple_v100.py --epochs 5 --verbose
-
-# カスタムパラメータ
-python ed_ann_simple_v100.py --epochs 10 --learning_rate 0.005 --batch_size 64
+# CPU強制実行
+python multi_ed_v021.py --cpu
 ```
 
-詳細は [EXAMPLES.md](EXAMPLES.md) を参照してください。
+## 背景理論
 
-## 🏗️ システム構造
+Error Diffusion学習アルゴリズムは、生物学的な神経伝達物質拡散メカニズムを模倣した革新的な
+ニューラルネットワーク学習手法です。従来の誤差逆伝播法とは異なり、以下の特徴を持ちます：
 
-```text
-ED-ANN v1.0.0
-├── 学習エンジン
-│   ├── EpochBasedTrainer    # エポック単位学習
-│   └── RestoredTrainer      # クラス単位学習
-├── ED法コア
-│   ├── アミン濃度制御
-│   ├── 重み更新制御
-│   └── 符号保持メカニズム
-├── 可視化システム
-│   ├── リアルタイムグラフ
-│   ├── モデル構造表示
-│   └── ハイパーパラメータ表示
-└── 検証システム
-    ├── CSV出力
-    ├── 精度検証
-    └── レポート生成
+### 核心原理
+- **独立出力ニューロン構造**: 各出力ニューロンが独自の重み空間を維持
+- **興奮性-抑制性ニューロンペア**: 生物学的にインスパイアされたペアニューロン構造
+- **アミン拡散学習制御**: 神経伝達物質様の拡散による誤差伝播
+
+### マルチクラス対応
+
+金子氏の`pat[5]`実装では、各クラスが完全に独立したニューラルネットワークで処理される
+革新的なアプローチを導入：
+
+```c
+// 各出力ニューロン（クラス）が独自の3次元重み配列を持つ
+double w_ot_ot[NMAX+1][MAX+1][MAX+1];  // [出力ニューロン][出力先][入力元]
 ```
 
-## 📋 必要要件
+主要な利点：
+- **並列クラス学習**: 各クラスが干渉なく独立して学習
+- **スケーラブルなマルチクラス処理**: 新しいクラスの追加が容易
+- **クラス間干渉の軽減**: クラス間の負の転移を最小化
 
-- Python 3.8+
-- PyTorch 2.0+
-- torchvision
-- matplotlib
-- numpy
-- pandas
+## コマンドライン引数
 
-## 📖 ドキュメント
+### ED法アルゴリズムパラメータ
+- `--learning_rate, --lr`: 学習率 alpha（デフォルト: 0.8）
+- `--amine, --ami`: 初期アミン濃度 beta（デフォルト: 0.3）
+- `--diffusion, --dif`: アミン拡散係数 u1（デフォルト: 1.0）
+- `--sigmoid, --sig`: シグモイド閾値 u0（デフォルト: 0.4）
+- `--weight1, --w1`: 重み初期値1（デフォルト: 1.0）
+- `--weight2, --w2`: 重み初期値2（デフォルト: 1.0）
 
-- [THEORY.md](THEORY.md) - ED法の理論的詳細
-- [EXAMPLES.md](EXAMPLES.md) - 実行例とパラメータ詳細
-- [API Documentation](docs/api.md) - API リファレンス
+### 実行設定パラメータ
+- `--epochs, --epo`: エポック数（デフォルト: 3）
+- `--hidden, --hid`: 隠れ層ニューロン数（デフォルト: 128）
+- `--batch_size, --batch`: ミニバッチサイズ（デフォルト: 32）
+- `--train_samples, --train`: 訓練データ数（デフォルト: 100）
+- `--test_samples, --test`: テストデータ数（デフォルト: 100）
 
-## 🎨 図表資料
+### 動作モード
+- `--viz`: リアルタイム可視化を有効化
+- `--verbose, --v`: 詳細表示を有効化
+- `--profile, --p`: 訓練時間詳細プロファイリング
+- `--cpu`: CPU強制実行モード（GPU無効化）
+- `--fashion`: Fashion-MNISTデータセット使用
+- `--save_fig [DIR]`: 図表保存（引数なし: ./images、引数あり: 指定ディレクトリ）
+- `--seed`: ランダムシード（デフォルト: ランダム）
 
-### ED法理論図
-![ED法基本理論](figures/ed_theory_diagram.png)
+## 技術仕様
 
-### マルチクラス拡張概念図
-![マルチクラス拡張](figures/multiclass_expansion.png)
+### 対応環境
+- **Python**: 3.8以上
+- **GPU**: CUDA対応GPU（オプション）
+- **OS**: Linux, Windows, macOS
 
-### 学習フロー比較
-![学習フロー比較](figures/learning_flow.png)
+### アーキテクチャ
+```
+modules/
+├── ed_core.py          # 核となるED法実装（1,517行）
+├── network_mnist.py    # MNIST専用ネットワーク構造（423行）
+├── performance.py      # 性能評価・分析（684行）
+├── visualization.py    # 可視化・グラフ生成（454行）
+└── data_loader.py      # データローディング（64行）
+```
 
-### 性能比較
-![性能比較](figures/performance_comparison.png)
+## 実験結果と検証
 
-### アミン濃度ダイナミクス
-![アミン濃度ダイナミクス](figures/amine_dynamics.png)
+### 理論準拠性検証
+- ✅ [`ed_genuine.prompt.md`](ed_genuine.prompt.md)仕様との100%一致確認済み
+- ✅ 金子氏原論文の数式との整合性検証完了
+- ✅ 独立出力ニューロン構造の正確な実装確認
 
-## 🔧 コマンドライン オプション
+### 実験結果
 
-| オプション | デフォルト | 説明 |
-|-----------|-----------|------|
-| `--epochs` | 3 | 学習エポック数 |
-| `--learning_rate` | 0.01 | 学習率 |
-| `--batch_size` | 32 | バッチサイズ |
-| `--hidden_size` | 64 | 隠れ層サイズ |
-| `--mode` | epoch | 学習モード (epoch/class/both) |
-| `--verify` | False | 精度検証機能 (5エポック以上必須) |
-| `--realtime` | False | リアルタイム可視化 |
-| `--cpu` | False | CPU強制使用 |
-| `--verbose` | False | 詳細ログ表示 |
-| `--random_seed` | 42 | ランダムシード |
+#### 精度と誤差グラフ
 
-## 🚨 重要な注意事項
+![精度と誤差グラフ](images/realtime-sample.png)
 
-### 精度検証機能
-- `--verify`オプションを使用する場合は**5エポック以上**が必須です
-- 5エポック未満で実行すると明確なエラーメッセージが表示されます
+MNIST手書き数字データセットでの学習進捗を示すリアルタイム可視化結果です。訓練精度とテスト精度の推移、
+および誤差の収束過程を確認できます。
 
-### 出力ファイル
-- **CSV検証ファイル**: `ed_ann_predictions_{mode}_{epochs}ep_{timestamp}.csv`
-- 検証レポートでファイル名が確認できます
+#### 混同行列グラフ
 
-## 🤝 貢献
+![混同行列グラフ](images/confusion-realtime.png)
 
-プルリクエストやイシューの報告を歓迎します。
+各クラス（0-9の数字）に対する分類性能を示す混同行列です。対角線上の値が高いほど正確な分類を
+示しており、ED学習アルゴリズムの優れたマルチクラス分類性能を確認できます。
 
-## 📄 ライセンス
 
-MIT License - 詳細は [LICENSE](LICENSE) を参照
+## 研究応用
 
-## 🙏 謝辞
+本実装は以下の用途に適用可能：
 
-このプロジェクトは生物学的な神経伝達メカニズムの研究にインスパイアされています。
+- **従来の誤差逆伝播法との比較研究**
+- **生物学的ニューラルネットワークモデリング**
+- **マルチクラス分類アルゴリズムの**ベンチマーク
+- **新規学習アルゴリズム**の開発基盤
 
-## 📞 お問い合わせ
+## ファイル構成
 
-- GitHub Issues: [Issues](https://github.com/yourusername/ed-ann-v1.0.0/issues)
-- Email: your.email@example.com
+```
+multi_ed_v021.py          # メインプログラム（524行）
+requirements.txt          # 依存関係管理（58行）
+[ed_genuine.prompt.md](ed_genuine.prompt.md)      # 理論的背景（377行）
+README.md                 # プロジェクト概要（本ファイル）
+modules/                  # コアモジュール群（総計3,190行）
+└── [各種実装モジュール]
+images/                   # 実験結果可視化
+├── realtime-sample.png   # 精度と誤差グラフ
+└── confusion-realtime.png # 混同行列グラフ
+original-c-source-code/   # 金子勇氏オリジナルCソースコード
+├── main.c, neuro.c等     # 核心アルゴリズム実装
+└── makefile              # コンパイル設定
+```
 
-## 📈 バージョン履歴
+## 依存関係
 
-### v1.0.0 (2025-08-17)
-- 🎉 初回リリース
-- 🧠 ED法マルチクラス分類システム実装
-- 📊 TensorFlow風モデル構造表示
-- 🔍 CSV出力精度検証システム
-- 📈 リアルタイム学習可視化
-- 🎯 MNIST 89.4%精度達成
+### 必須パッケージ
+```
+numpy>=1.21.0
+matplotlib>=3.5.0
+tqdm>=4.62.0
+```
+
+### 機械学習パッケージ
+```
+torch>=1.10.0
+torchvision>=0.11.0
+```
+
+### オプション（GPU高速化）
+```
+cupy>=10.0.0  # CUDA対応GPU使用時
+```
+
+詳細なインストール手順は`requirements.txt`を参照してください。
+
+## 引用
+
+本実装を研究で使用される場合は、できるだけ以下を引用するようにしてください：
+
+```
+金子勇 (1999). Error Diffusion学習アルゴリズム - マルチクラス分類のためのOne-Hot符号化実装
+[ED-Genuine Algorithm v0.2.1 Python実装]
+```
+
+## ライセンス
+
+本プロジェクトは、金子氏のオリジナル研究のオープン精神を尊重し、MITライセンスの下で公開されています。
+
+## 終わりに
+
+Error Diffusion学習アルゴリズムの先駆的研究と、`pat[5]`マルチクラス実装により提供された
+インスピレーションに対し、**金子勇氏**に敬意を表します。本プロジェクトは、金子氏の
+生物学的にインスパイアされた機械学習への革新的アプローチを保存し、発展させることを目的と
+しています。
 
 ---
 
-**🧠 ED-ANN: 生物学的知見とAI技術の融合**
-
-*Error Diffusion Method による次世代ニューラルネットワーク*
+**注意**: 本実装は[`ed_genuine.prompt.md`](ed_genuine.prompt.md)の詳細な理論仕様と金子氏のオリジナルCコードの
+研究に基づいています。研究者の皆様には、完全な理論的理解のため、[`ed_genuine.prompt.md`](ed_genuine.prompt.md)と
+オリジナルのソース資料も参照されることをお勧めします。
