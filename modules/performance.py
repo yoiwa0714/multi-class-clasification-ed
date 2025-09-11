@@ -1,7 +1,12 @@
 """
-performance.py
-純正ED法（Error Diffusion Learning Algorithm）Python実装 v0.2.0
-Original C implementation by Isamu Kaneko (1999)
+パフォーマンス関連モジュール
+ED法SNN実装のパフォーマンス最適化とプロファイリング機能
+
+ed_v017.pyからTrainingProfiler/LearningResultsBufferを切り出し
+ed_genuine.prompt.md準拠の実装
+
+Original Algorithm: 金子勇 (1999)
+Implementation: ed_genuine.prompt.md compliance
 """
 
 import numpy as np
@@ -555,13 +560,12 @@ class LearningResultsBuffer:
             true_labels = self.test_true_labels
         
         if epoch == -1:
-            # 全エポック統合：最終エポックのデータのみ使用
-            # （学習完了後の最終結果表示用）
-            final_epoch = self.epochs - 1
-            if final_epoch >= 0 and final_epoch < len(predicted_labels):
-                for sample_idx in range(len(predicted_labels[final_epoch])):
-                    true_label = true_labels[final_epoch][sample_idx]
-                    pred_label = predicted_labels[final_epoch][sample_idx]
+            # 🎯 ed_genuine.prompt.md準拠：全エポック統合 = 全エポックの累積データ
+            # 学習完了後の最終結果として、全学習過程での累積混同行列を表示
+            for epoch_idx in range(len(predicted_labels)):
+                for sample_idx in range(len(predicted_labels[epoch_idx])):
+                    true_label = true_labels[epoch_idx][sample_idx]
+                    pred_label = predicted_labels[epoch_idx][sample_idx]
                     if 0 <= true_label < num_classes and 0 <= pred_label < num_classes:
                         confusion_matrix[true_label][pred_label] += 1
         else:

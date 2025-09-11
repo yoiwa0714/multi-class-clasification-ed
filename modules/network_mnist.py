@@ -1,7 +1,13 @@
 """
-network_mnist.py
-純正ED法（Error Diffusion Learning Algorithm）Python実装 v0.2.0
-Original C implementation by Isamu Kaneko (1999)
+ED-Genuine MNIST専用ネットワーククラス
+Isamu Kaneko's Error Diffusion Learning Algorithm implementation
+Based on C code pat[5]: One-Hot encoding for multi-class classification
+
+【ed_genuine.prompt.md 準拠実装】
+- MNIST/Fashion-MNIST データセット専用拡張
+- 独立出力ニューロンアーキテクチャ 
+- ハイパーパラメータ制御対応
+- リアルタイム可視化機能
 """
 
 import numpy as np
@@ -110,7 +116,7 @@ class EDNetworkMNIST(EDGenuine):
         import sys
         import os
         sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-        from multi_ed_v020 import LearningResultsBuffer
+        from ed_v017_simple import LearningResultsBuffer
         results_buffer = LearningResultsBuffer(len(train_inputs), len(test_inputs), epochs)
         
         # リアルタイム可視化設定（学習開始時点で表示）
@@ -119,7 +125,7 @@ class EDNetworkMNIST(EDGenuine):
         if enable_visualization and HAS_VISUALIZATION:
             print("🎨 リアルタイム可視化準備中...")
             # NOTE: 可視化クラスは別モジュールから取得する必要がある
-            from multi_ed_v020 import RealtimeLearningVisualizer, RealtimeConfusionMatrixVisualizer
+            from ed_v017_simple import RealtimeLearningVisualizer, RealtimeConfusionMatrixVisualizer
             visualizer = RealtimeLearningVisualizer(max_epochs=epochs, save_dir=getattr(self.hyperparams, 'save_fig', None))
             visualizer.setup_plots()
             
