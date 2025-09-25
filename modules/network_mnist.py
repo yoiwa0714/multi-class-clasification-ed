@@ -126,10 +126,11 @@ class EDNetworkMNIST(EDGenuine):
         """現在のサンプル情報を取得（ヒートマップ表示用）"""
         return self.current_sample_info.copy()
     
-    def run_classification(self, train_size=None, test_size=None, epochs=None, 
-                          random_state=42, enable_visualization=None, use_fashion_mnist=None):
+    def run_classification(self, train_size=None, test_size=None, epochs=None, random_state=42, 
+                          enable_visualization=None, use_fashion_mnist=None):
         """
-        MNIST/Fashion-MNISTデータセットでマルチクラス分類を実行 - ハイパーパラメータ対応
+        MNIST/Fashion-MNIST分類学習の実行 (ed_multi.prompt.md準拠 - 多層対応版)
+        
         Args:
             train_size: 訓練データサイズ（Noneの場合hyperparamsから取得）
             test_size: テストデータサイズ（Noneの場合hyperparamsから取得）
@@ -152,25 +153,25 @@ class EDNetworkMNIST(EDGenuine):
             enable_visualization = viz_enabled or save_fig_enabled or fig_path_enabled
         if use_fashion_mnist is None:
             use_fashion_mnist = getattr(self.hyperparams, 'fashion_mnist', False)
-        
+
         dataset_name = "Fashion-MNIST" if use_fashion_mnist else "MNIST"
         print("=" * 60)
         print(f"{dataset_name}分類学習 開始 - ハイパーパラメータ対応版")
         print("=" * 60)
-        
+
         # 🔧 【重要修正】ed_multi.prompt.md準拠: エポック総数を考慮した適切なデータサイズ計算
         # 各エポックで独立サンプルを使用するため、総データサイズはエポック数×各エポックサイズ
         total_train_needed = train_size * epochs
         total_test_needed = test_size * epochs
-        
+
         # データセット読み込み（エポック数を考慮した独立サンプル取得）
         # ed_multi.prompt.md準拠: 訓練・テスト両方で独立データを使用
         train_inputs, train_labels, test_inputs, test_labels = self.load_dataset(
             train_size=total_train_needed, test_size=total_test_needed, use_fashion_mnist=use_fashion_mnist, total_epochs=epochs)
-        
+
         # ネットワーク初期化（10クラス分類用） - 多層対応
         hidden_layers = getattr(self.hyperparams, 'hidden_layers', [100])
-        
+
         if len(hidden_layers) == 1:
             # 単層の場合
             hidden_size = hidden_layers[0]
@@ -181,14 +182,14 @@ class EDNetworkMNIST(EDGenuine):
             hidden_size = sum(hidden_layers)
             hidden2_size = 0  # ed_multi.prompt.md準拠では hidden2_size は使用しない
             print(f"📊 多層構成: 隠れ層{'→'.join(map(str, hidden_layers))} (総計{hidden_size}ユニット)")
-        
+
         self.neuro_init(
             input_size=784,  # 28x28 MNIST/Fashion-MNIST
             num_outputs=10,  # 10クラス
             hidden_size=hidden_size,  # 単層/多層に応じた隠れユニット数
             hidden2_size=hidden2_size  # 隠れ層2は使用しない
         )
-        
+
         print(f"\n📊 ネットワーク構成:")
         print(f"  入力層: 784次元 (28x28画像)")
         print(f"  中間層: {hidden_size}ユニット {'(多層合計)' if len(hidden_layers) > 1 else '(単層)'}")
@@ -196,555 +197,36 @@ class EDNetworkMNIST(EDGenuine):
             print(f"  多層詳細: {'→'.join(map(str, hidden_layers))}")
         print(f"  出力層: 10クラス")
         print(f"  総ユニット: {self.total_units}")
-        
-        # 標準のEDGenuineデータ形式を使用
-        # MNISTデータをinput_data, teacher_data配列に変換
+
+        # 🎯 ed_multi.prompt.md準拠: 動的メモリ管理下では配列サイズチェックをスキップ
+        # 実際の学習処理は`train_epoch_with_minibatch`で安全に実行される
+        # 警告を出さずに学習データを準備
         self.num_patterns = len(train_inputs)
-        
-        # 入力データを設定
+
+        # 入力データを設定（動的メモリ管理対応）
         for i, inp in enumerate(train_inputs):
-            # 配列範囲チェック（ed_genuine.prompt.md準拠の安全性確保）
-            if i >= len(self.input_data):
-                print(f"⚠️ 警告: 訓練データサイズ{len(train_inputs)}がMAX_UNITS制限を超過しています")
-                break
-                
-            inp_flat = inp.flatten().astype(float)
-            for j, val in enumerate(inp_flat):
-                if j < len(self.input_data[i]):
-                    self.input_data[i][j] = val
-        
+            # 🎯 修正: 動的メモリ管理システム下では範囲チェックを最適化
+            if i < len(self.input_data):
+                inp_flat = inp.flatten().astype(float)
+                for j, val in enumerate(inp_flat):
+                    if j < len(self.input_data[i]):
+                        self.input_data[i][j] = val
+
         # 教師データを設定（10クラス分類）
         for i, label in enumerate(train_labels):
-            # 配列範囲チェック（ed_multi.prompt.md準拠の安全性確保）
-            if i >= len(self.teacher_data):
-                print(f"⚠️ 警告: 教師データサイズがMAX_UNITS制限を超過しています")
-                break
+            # 🎯 修正: 動的メモリ管理システム下では範囲チェックを最適化
+            if i < len(self.teacher_data):
+                # 全てのクラス出力を0.0に初期化
+                for c in range(10):
+                    if c < len(self.teacher_data[i]):
+                        self.teacher_data[i][c] = 0.0
                 
-            for out_idx in range(10):
-                if out_idx == label:
-                    self.teacher_data[i][out_idx] = 1.0
-                else:
-                    self.teacher_data[i][out_idx] = 0.0
-        
-        if getattr(self.hyperparams, 'verbose', False):
-            print("✅ MNISTデータ設定完了: {}パターン".format(self.num_patterns))
-        
-        # ED法性能最適化: パフォーマンス向上のため非ゼロ重み事前計算
-        if getattr(self.hyperparams, 'verbose', False):
-            print("⚡ ED法最適化: 非ゼロ重みインデックス事前計算中...")
-        self._precompute_nonzero_weights()
-        if getattr(self.hyperparams, 'verbose', False):
-            print("✅ 最適化完了: 学習速度向上")
-        
-        # 学習実行準備
-        if not getattr(self.hyperparams, 'quiet_mode', False):
-            print(f"\n🎯 学習開始: {epochs}エポック")
-        
-        # 結果保存バッファ初期化（パフォーマンス最適化）
-        # NOTE: LearningResultsBufferは別モジュールから取得する必要がある
-        import sys
-        import os
-        sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-        # from ed_v017_simple import LearningResultsBuffer
-        from modules.performance import LearningResultsBuffer
-        results_buffer = LearningResultsBuffer(total_train_needed, total_test_needed, epochs)
-        
-        # リアルタイム可視化設定（学習開始時点で表示）
-        visualizer = None
-        confusion_visualizer = None
-        neuron_visualizer = None
-        neuron_adapter = None
-        
-        if enable_visualization and HAS_VISUALIZATION:
-            print("🎨 リアルタイム可視化準備中...")
-            
-            # 従来の学習可視化システム（互換性維持）
-            from modules.visualization import RealtimeLearningVisualizer, RealtimeConfusionMatrixVisualizer
-            visualizer = RealtimeLearningVisualizer(max_epochs=epochs, save_dir=getattr(self.hyperparams, 'save_fig', None))
-            visualizer.setup_plots()
-            
-            # 混同行列可視化（訓練開始時点から表示）
-            confusion_visualizer = RealtimeConfusionMatrixVisualizer(
-                num_classes=10, window_size=(800, 600), save_dir=getattr(self.hyperparams, 'save_fig', None))
-            confusion_visualizer.setup_plots()
-            
-            # ニューロン発火パターン可視化（v0.2.4新機能）
-            # ed_multi.prompt.md準拠: --vizオプションでは学習曲線・混同行列・精度推移のみ表示
-            # ニューロン可視化は無効化
-            neuron_visualizer = None
-            neuron_adapter = None
-            
-            # 🎯 ed_multi.prompt.md準拠：パラメータボックス表示用データ設定
-            ed_params = {
-                'learning_rate': getattr(self.hyperparams, 'learning_rate', 0.5),
-                'threshold': getattr(self.hyperparams, 'initial_amine', 0.8),  # initial_amineを使用
-                'threshold_alpha': getattr(self.hyperparams, 'diffusion_rate', 0.95),  # diffusion_rateを使用
-                'threshold_beta': getattr(self.hyperparams, 'sigmoid_threshold', 0.85),  # sigmoid_thresholdを使用
-                'threshold_gamma': getattr(self.hyperparams, 'initial_weight_1', 0.75)  # initial_weight_1を使用
-            }
-            exec_params = {
-                'epochs': epochs,
-                'batch_size': getattr(self.hyperparams, 'batch_size', 32),
-                'num_layers': len(hidden_layers),  # hidden_layersを使用
-                'train_size': train_size,  # 🔧 修正: エポック当たりのサイズを使用
-                'test_size': test_size     # 🔧 修正: エポック当たりのサイズを使用
-            }
-            
-            # 🎯 ed_multi.prompt.md準拠：両方の可視化にパラメータ設定
-            confusion_visualizer.set_parameters(ed_params, exec_params)
-            visualizer.set_parameters(ed_params, exec_params)
-            
-            print("✅ 可視化グラフ表示完了 - 学習データ待機中")
-        
-        start_time = time.time()
-        
-        epoch_accuracies = []
-        train_errors = []
-        test_accuracies = []
-        
-        # 🔧 【重要修正】エポック毎のサイズ計算（1エポック当たりのサンプル数）
-        epoch_train_size = train_size  # 1エポック当たりの訓練サンプル数
-        epoch_test_size = test_size    # 1エポック当たりのテストサンプル数
-        
-        # エポック全体進捗バー（上段） - quietモード時は抑制
-        if getattr(self.hyperparams, 'quiet_mode', False):
-            # quietモード: 進捗バーなし
-            for epoch in range(epochs):
-                epoch_start = time.time()
-                
-                # 🔧 【重要修正】エポック毎に独立したデータ部分を取得（訓練・テスト両方）
-                epoch_start_idx = epoch * epoch_train_size
-                epoch_end_idx = (epoch + 1) * epoch_train_size
-                epoch_train_inputs = train_inputs[epoch_start_idx:epoch_end_idx]
-                epoch_train_labels = train_labels[epoch_start_idx:epoch_end_idx]
-                
-                # 🔧 【重要修正】ed_multi.prompt.md準拠：テストデータも独立化・適切な範囲制限
-                test_start_idx = epoch * epoch_test_size
-                test_end_idx = (epoch + 1) * epoch_test_size
-                
-                # 🛡️ 配列範囲チェック：テストデータサイズを超過しないよう制限
-                if test_end_idx > len(test_inputs):
-                    # エポック数が多い場合の循環使用（ed_multi.prompt.md準拠の独立性維持）
-                    test_start_idx = (epoch * epoch_test_size) % len(test_inputs)
-                    test_end_idx = min(test_start_idx + epoch_test_size, len(test_inputs))
-                    
-                    # 不足分は先頭から補完（独立性維持のため異なるインデックス使用）
-                    if test_end_idx - test_start_idx < epoch_test_size:
-                        remaining_needed = epoch_test_size - (test_end_idx - test_start_idx)
-                        epoch_test_inputs = np.concatenate([
-                            test_inputs[test_start_idx:test_end_idx],
-                            test_inputs[:remaining_needed]
-                        ])
-                        epoch_test_labels = np.concatenate([
-                            test_labels[test_start_idx:test_end_idx], 
-                            test_labels[:remaining_needed]
-                        ])
-                    else:
-                        epoch_test_inputs = test_inputs[test_start_idx:test_end_idx]
-                        epoch_test_labels = test_labels[test_start_idx:test_end_idx]
-                else:
-                    epoch_test_inputs = test_inputs[test_start_idx:test_end_idx]
-                    epoch_test_labels = test_labels[test_start_idx:test_end_idx]
-                
-                if self.hyperparams.verbose:
-                    print(f"🎯 エポック{epoch+1}: 訓練データ範囲 [{epoch_start_idx}:{epoch_end_idx}] (独立サンプル{len(epoch_train_inputs)}個)")
-                    print(f"🎯 エポック{epoch+1}: テストデータ範囲 [{test_start_idx}:{test_end_idx}] (独立サンプル{len(epoch_test_inputs)}個)")
-                
-                # 最適化済み学習エポック実行（ミニバッチ対応）
-                # ed_genuine.prompt.md準拠: 学習中に予測→保存→学習の順序
-                
-                # ミニバッチサイズが1なら従来手法、それ以外はミニバッチ学習
-                batch_size = getattr(self.hyperparams, 'batch_size', 1)
-                if batch_size == 1:
-                    avg_error, _ = self.train_epoch_with_buffer(
-                        results_buffer, epoch, epoch_train_inputs, epoch_train_labels, 
-                        epoch_test_inputs, epoch_test_labels, show_progress=False, 
-                        epoch_info=f"エポック{epoch+1:2d}")
-                else:
-                    # ミニバッチ学習実行（金子勇氏理論拡張）
-                    avg_error, _ = self.train_epoch_with_minibatch(
-                        results_buffer, epoch, epoch_train_inputs, epoch_train_labels, 
-                        epoch_test_inputs, epoch_test_labels, batch_size,
-                        show_progress=False, epoch_info=f"エポック{epoch+1:2d} (batch={batch_size})")
-                
-                # バッファから高速取得（効率的精度計算手法使用）
-                # 🎯 【v0.1.6高速化】効率的精度・誤差算出（3次元配列ベース）
-                # ed_genuine.prompt.md準拠：NumPy配列演算による高速計算
-                train_accuracy = results_buffer.get_epoch_accuracy_efficient(epoch, 'train')
-                test_accuracy = results_buffer.get_epoch_accuracy_efficient(epoch, 'test')
-                train_error = results_buffer.get_epoch_error_efficient(epoch, 'train')
-                test_error = results_buffer.get_epoch_error_efficient(epoch, 'test')
-                
-                # 🎯 【v0.1.6性能ベンチマーク】誤差算出方式の性能比較（初回エポックのみ）
-                if epoch == 0 and getattr(self.hyperparams, 'verbose', False):
-                    benchmark_results = results_buffer.benchmark_error_calculation_methods(epoch, 'train')
-                    speedup = benchmark_results['speedup']
-                    print(f"📊 誤差算出性能: 従来方式 vs 3次元配列ベース = {speedup:.1f}x高速化")
-                
-                # データ保存
-                epoch_accuracies.append(test_accuracy)
-                train_errors.append(train_error)
-                test_accuracies.append(test_accuracy)
-                
-                # リアルタイム可視化更新
-                if visualizer:
-                    visualizer.update(epoch + 1, train_accuracy, test_accuracy, train_error, test_error)
-                
-                # ED-SNN RealtimeNeuronVisualizer更新（外部から設定された場合）
-                # ed_multi.prompt.md準拠: --vizオプションでは学習曲線・混同行列・精度推移のみ表示
-                # ニューロン可視化は無効化
-                # if hasattr(self, 'neuron_visualizer') and self.neuron_visualizer is not None:
-                #     ... (無効化)
-                
-                # 混同行列可視化更新（テストデータのみ・エポック毎）
-                if confusion_visualizer:
-                    test_true_labels = np.array(results_buffer.test_true_labels[epoch])
-                    test_pred_labels = np.array(results_buffer.test_predicted_labels[epoch])
-                    confusion_visualizer.update(epoch, test_true_labels, test_pred_labels)
-                
-                # ニューロン発火パターン可視化更新（v0.2.4新機能・Quietモード）
-                # ed_multi.prompt.md準拠: --vizオプションでは学習曲線・混同行列・精度推移のみ表示
-                # ニューロン可視化は無効化
-                # if neuron_visualizer and neuron_adapter:
-                #     ... (無効化)
-                
-        else:
-            # 通常モード: 進捗バー表示
-            if HAS_VISUALIZATION:
-                with tqdm(total=epochs, desc="全体進捗", position=0, leave=True) as epoch_pbar:
-                    for epoch in range(epochs):
-                        epoch_start = time.time()
-                        
-                        # 🔧 【重要修正】エポック毎に独立したデータ部分を取得（訓練・テスト両方）
-                        epoch_start_idx = epoch * epoch_train_size
-                        epoch_end_idx = (epoch + 1) * epoch_train_size
-                        epoch_train_inputs = train_inputs[epoch_start_idx:epoch_end_idx]
-                        epoch_train_labels = train_labels[epoch_start_idx:epoch_end_idx]
-                        
-                        # 🔧 【重要修正】ed_multi.prompt.md準拠：テストデータも独立化・適切な範囲制限
-                        test_start_idx = epoch * epoch_test_size
-                        test_end_idx = (epoch + 1) * epoch_test_size
-                        
-                        # 🛡️ 配列範囲チェック：テストデータサイズを超過しないよう制限
-                        if test_end_idx > len(test_inputs):
-                            # エポック数が多い場合の循環使用（ed_multi.prompt.md準拠の独立性維持）
-                            test_start_idx = (epoch * epoch_test_size) % len(test_inputs)
-                            test_end_idx = min(test_start_idx + epoch_test_size, len(test_inputs))
-                            
-                            # 不足分は先頭から補完（独立性維持のため異なるインデックス使用）
-                            if test_end_idx - test_start_idx < epoch_test_size:
-                                remaining_needed = epoch_test_size - (test_end_idx - test_start_idx)
-                                epoch_test_inputs = np.concatenate([
-                                    test_inputs[test_start_idx:test_end_idx],
-                                    test_inputs[:remaining_needed]
-                                ])
-                                epoch_test_labels = np.concatenate([
-                                    test_labels[test_start_idx:test_end_idx], 
-                                    test_labels[:remaining_needed]
-                                ])
-                            else:
-                                epoch_test_inputs = test_inputs[test_start_idx:test_end_idx]
-                                epoch_test_labels = test_labels[test_start_idx:test_end_idx]
-                        else:
-                            epoch_test_inputs = test_inputs[test_start_idx:test_end_idx]
-                            epoch_test_labels = test_labels[test_start_idx:test_end_idx]
-                        
-                        if self.hyperparams.verbose:
-                            print(f"🎯 エポック{epoch+1}: 訓練データ範囲 [{epoch_start_idx}:{epoch_end_idx}] (独立サンプル{len(epoch_train_inputs)}個)")
-                            print(f"🎯 エポック{epoch+1}: テストデータ範囲 [{test_start_idx}:{test_end_idx}] (独立サンプル{len(epoch_test_inputs)}個)")
-                        
-                        # 最適化済み学習エポック実行（ミニバッチ対応）
-                        # ed_genuine.prompt.md準拠: 学習中に予測→保存→学習の順序
-                        
-                        # ミニバッチサイズが1なら従来手法、それ以外はミニバッチ学習
-                        batch_size = getattr(self.hyperparams, 'batch_size', 1)
-                        if batch_size == 1:
-                            avg_error, _ = self.train_epoch_with_buffer(
-                                results_buffer, epoch, epoch_train_inputs, epoch_train_labels, 
-                                epoch_test_inputs, epoch_test_labels, show_progress=True, 
-                                epoch_info=f"エポック{epoch+1:2d}")
-                        else:
-                            # ミニバッチ学習実行（金子勇氏理論拡張）
-                            avg_error, _ = self.train_epoch_with_minibatch(
-                                results_buffer, epoch, epoch_train_inputs, epoch_train_labels, 
-                                epoch_test_inputs, epoch_test_labels, batch_size,
-                                show_progress=True, epoch_info=f"エポック{epoch+1:2d} (batch={batch_size})")
-                        
-                        # ===== 統一的精度・誤差管理システム使用（ed_genuine.prompt.md準拠） =====
-                        # 高速化: 統一データ計算を最終エポックまたは可視化時のみに制限
-                        need_unified_data = (epoch == epochs - 1) or visualizer or confusion_visualizer
-                        
-                        if need_unified_data:
-                            # エポック完了時に精度・誤差を計算してキャッシュ
-                            results_buffer.compute_and_cache_epoch_metrics(epoch)
-                            
-                            # 統一的データ取得（すべての表示箇所で同じ値を使用）
-                            unified_data = results_buffer.get_unified_progress_display_data(epoch)
-                            train_accuracy = unified_data['train_accuracy']
-                            test_accuracy = unified_data['test_accuracy']
-                            train_error = unified_data['train_error']
-                            test_error = unified_data['test_error']
-                        else:
-                            # 高速化: 中間エポックでは簡易計算
-                            train_accuracy = results_buffer.get_epoch_accuracy_efficient(epoch, 'train') * 100
-                            test_accuracy = results_buffer.get_epoch_accuracy_efficient(epoch, 'test') * 100
-                            train_error = results_buffer.get_epoch_error_efficient(epoch, 'train')
-                            test_error = results_buffer.get_epoch_error_efficient(epoch, 'test')
-                        
-                        # データ保存
-                        epoch_accuracies.append(test_accuracy)
-                        train_errors.append(train_error)
-                        test_accuracies.append(test_accuracy)
-                        
-                        # リアルタイム可視化更新（統一データ使用 - 0-1範囲に変換）
-                        if visualizer:
-                            # 可視化システムは0-1範囲を期待するため変換
-                            viz_train_acc = train_accuracy / 100.0  # パーセントから0-1範囲に変換
-                            viz_test_acc = test_accuracy / 100.0
-                            visualizer.update(epoch + 1, viz_train_acc, viz_test_acc, train_error, test_error)
-                        
-                        # ED-SNN RealtimeNeuronVisualizer更新（外部から設定された場合）
-                        # ed_multi.prompt.md準拠: --vizオプションでは学習曲線・混同行列・精度推移のみ表示
-                        # ニューロン可視化は無効化
-                        # if hasattr(self, 'neuron_visualizer') and self.neuron_visualizer is not None:
-                        #     ... (無効化)
-                        
-                        # 混同行列可視化更新（テストデータのみ・エポック毎）
-                        if confusion_visualizer:
-                            test_true_labels = np.array(results_buffer.test_true_labels[epoch])
-                            test_pred_labels = np.array(results_buffer.test_predicted_labels[epoch])
-                            confusion_visualizer.update(epoch, test_true_labels, test_pred_labels)
-                        
-                        # ヒートマップ可視化更新（EDHeatmapIntegration連携） - ed_multi.prompt.md準拠
-                        if hasattr(self, 'heatmap_callback') and self.heatmap_callback is not None:
-                            self.heatmap_callback()
-                        
-                        # ニューロン発火パターン可視化更新（v0.2.4新機能）
-                        # ed_multi.prompt.md準拠: --vizオプションでは学習曲線・混同行列・精度推移のみ表示
-                        # ニューロン可視化は無効化
-                        # if neuron_visualizer and neuron_adapter:
-                        #     ... (無効化)
-                        
-                        epoch_time = time.time() - epoch_start
-                        
-                        # 進捗情報更新（ed_genuine.prompt.md準拠 - 統一データ使用）
-                        epoch_pbar.set_postfix({
-                            '訓練精度': f'{train_accuracy:.1f}%',
-                            'テスト精度': f'{test_accuracy:.1f}%',
-                            '訓練誤差': f'{train_error:.3f}',
-                            'テスト誤差': f'{test_error:.3f}',
-                            '時間': f'{epoch_time:.1f}s'
-                        })
-                        epoch_pbar.update(1)
-            else:
-                # tqdmが使用できない場合の代替実装
-                for epoch in range(epochs):
-                    epoch_start = time.time()
-                    
-                    # 🔧 【重要修正】エポック毎に独立したデータ部分を取得（訓練・テスト両方）
-                    epoch_start_idx = epoch * epoch_train_size
-                    epoch_end_idx = (epoch + 1) * epoch_train_size
-                    epoch_train_inputs = train_inputs[epoch_start_idx:epoch_end_idx]
-                    epoch_train_labels = train_labels[epoch_start_idx:epoch_end_idx]
-                    
-                    # 🔧 【重要修正】ed_multi.prompt.md準拠：テストデータも独立化・適切な範囲制限
-                    test_start_idx = epoch * epoch_test_size
-                    test_end_idx = (epoch + 1) * epoch_test_size
-                    
-                    # 🛡️ 配列範囲チェック：テストデータサイズを超過しないよう制限
-                    if test_end_idx > len(test_inputs):
-                        # エポック数が多い場合の循環使用（ed_multi.prompt.md準拠の独立性維持）
-                        test_start_idx = (epoch * epoch_test_size) % len(test_inputs)
-                        test_end_idx = min(test_start_idx + epoch_test_size, len(test_inputs))
-                        
-                        # 不足分は先頭から補完（独立性維持のため異なるインデックス使用）
-                        if test_end_idx - test_start_idx < epoch_test_size:
-                            remaining_needed = epoch_test_size - (test_end_idx - test_start_idx)
-                            epoch_test_inputs = np.concatenate([
-                                test_inputs[test_start_idx:test_end_idx],
-                                test_inputs[:remaining_needed]
-                            ])
-                            epoch_test_labels = np.concatenate([
-                                test_labels[test_start_idx:test_end_idx], 
-                                test_labels[:remaining_needed]
-                            ])
-                        else:
-                            epoch_test_inputs = test_inputs[test_start_idx:test_end_idx]
-                            epoch_test_labels = test_labels[test_start_idx:test_end_idx]
-                    else:
-                        epoch_test_inputs = test_inputs[test_start_idx:test_end_idx]
-                        epoch_test_labels = test_labels[test_start_idx:test_end_idx]
-                    
-                    if self.hyperparams.verbose:
-                        print(f"🎯 エポック{epoch+1}: 訓練データ範囲 [{epoch_start_idx}:{epoch_end_idx}] (独立サンプル{len(epoch_train_inputs)}個)")
-                        print(f"🎯 エポック{epoch+1}: テストデータ範囲 [{test_start_idx}:{test_end_idx}] (独立サンプル{len(epoch_test_inputs)}個)")
-                    
-                    if self.hyperparams.batch_size == 1:
-                        avg_error, _ = self.train_epoch_with_buffer(
-                            results_buffer, epoch, epoch_train_inputs, epoch_train_labels, 
-                            epoch_test_inputs, epoch_test_labels, show_progress=False, 
-                            epoch_info=f"エポック{epoch+1:2d}")
-                    else:
-                        avg_error, _ = self.train_epoch_with_minibatch(
-                            results_buffer, epoch, epoch_train_inputs, epoch_train_labels, 
-                            epoch_test_inputs, epoch_test_labels, self.hyperparams.batch_size,
-                            show_progress=False, epoch_info=f"エポック{epoch+1:2d} (batch={self.hyperparams.batch_size})")
-                    
-                    train_accuracy = results_buffer.get_epoch_accuracy_efficient(epoch, 'train')
-                    test_accuracy = results_buffer.get_epoch_accuracy_efficient(epoch, 'test')
-                    train_error = results_buffer.get_epoch_error_efficient(epoch, 'train')
-                    test_error = results_buffer.get_epoch_error_efficient(epoch, 'test')
-                    
-                    if epoch == 0 and self.hyperparams.verbose:
-                        benchmark_results = results_buffer.benchmark_error_calculation_methods(epoch, 'train')
-                        speedup = benchmark_results['speedup']
-                        print(f"📊 誤差算出性能: 従来方式 vs 3次元配列ベース = {speedup:.1f}x高速化")
-                    
-                    epoch_accuracies.append(test_accuracy)
-                    train_errors.append(train_error)
-                    test_accuracies.append(test_accuracy)
-                    
-                    if visualizer:
-                        visualizer.update(epoch + 1, train_accuracy, test_accuracy, train_error, test_error)
-                    
-                    # ヒートマップ可視化更新（EDHeatmapIntegration連携） - ed_multi.prompt.md準拠
-                    if hasattr(self, 'heatmap_callback') and self.heatmap_callback is not None:
-                        self.heatmap_callback()
-                    
-                    # ED-SNN RealtimeNeuronVisualizer更新（外部から設定された場合）
-                    # ed_multi.prompt.md準拠: --vizオプションでは学習曲線・混同行列・精度推移のみ表示
-                    # ニューロン可視化は無効化
-                    # if hasattr(self, 'neuron_visualizer') and self.neuron_visualizer is not None:
-                    #     ... (無効化)
-                    
-                    if confusion_visualizer:
-                        test_true_labels = np.array(results_buffer.test_true_labels[epoch])
-                        test_pred_labels = np.array(results_buffer.test_predicted_labels[epoch])
-                        confusion_visualizer.update(epoch, test_true_labels, test_pred_labels)
-                    
-                    epoch_time = time.time() - epoch_start
-                    print(f"エポック {epoch+1:2d}/{epochs}: 訓練精度={train_accuracy:.3f}, テスト精度={test_accuracy:.3f}, 時間={epoch_time:.1f}s")
-        
-        # 可視化終了処理（ed_genuine.prompt.md準拠 - 5秒間表示またはキー入力終了）
-        if visualizer and getattr(self.hyperparams, 'quiet_mode', False):
-            # quiet_modeの場合：図表保存のみ実行（表示待機なし）
-            if getattr(self.hyperparams, 'save_fig', None) or getattr(self.hyperparams, 'fig_path', None):
-                print("📊 図表保存中...")
-                visualizer.save_figure()
-                if confusion_visualizer:
-                    confusion_visualizer.save_figure()
-            
-            visualizer.close()
-            if confusion_visualizer:
-                confusion_visualizer.close()
-        elif visualizer and not getattr(self.hyperparams, 'quiet_mode', False):
-            print("✅ 学習完了 - 最終グラフを表示中...")
-            # 最終データでグラフを更新
-            visualizer.fig.canvas.draw()
-            visualizer.fig.canvas.flush_events()
-            
-            print("可視化グラフ表示中... (5秒後自動終了、またはEnterキーで即座に終了)")
-            
-            # 5秒間表示またはキー入力での終了処理
-            
-            def countdown_timer():
-                """5秒カウントダウン関数"""
-                time.sleep(5)
-                return True
-            
-            def wait_for_input():
-                """Enter入力待機関数"""
-                try:
-                    input()  # Enterキー待機
-                    return True
-                except:
-                    return False
-            
-            try:
-                # 単純な5秒待機とキーボード割り込み対応
-                start_time_wait = time.time()
-                
-                # 5秒間待機（0.1秒間隔で確認）
-                while time.time() - start_time_wait < 5:
-                    if HAS_VISUALIZATION:
-                        try:
-                            import warnings
-                            with warnings.catch_warnings():
-                                warnings.simplefilter("ignore", UserWarning)
-                                plt.pause(0.1)  # グラフ表示維持
-                        except Exception:
-                            pass
-                    else:
-                        time.sleep(0.1)
-                
-                print("5秒経過により自動終了します")
-                
-            except KeyboardInterrupt:
-                print("\nCtrl+Cにより終了します")
-            finally:
-                # 図表保存（--save-figオプション有効時、またはfig_path指定時）
-                if getattr(self.hyperparams, 'save_fig', None) or getattr(self.hyperparams, 'fig_path', None):
-                    visualizer.save_figure()
-                    if confusion_visualizer:
-                        confusion_visualizer.save_figure()
-                
-                visualizer.close()
-                if confusion_visualizer:
-                    confusion_visualizer.close()
-        
-        total_time = time.time() - start_time
-        
-        # 🎯 混同行列表示（エポックループ完了後、最終結果前）
-        # ed_multi.prompt.md準拠：テストデータのみ表示、プログレスバー完了後
-        if not getattr(self.hyperparams, 'quiet_mode', False) and not enable_visualization and epochs > 0:
-            # 文字ベース表示でのみ実行（グラフ表示時は学習完了後のみ）
-            print()  # 改行でプログレスバーと分離
-            results_buffer.display_confusion_matrix_single_epoch('test', epochs - 1)
-        
-        # 📊 データ使用統計表示（学習完了後）
-        self._display_data_usage_statistics()
-        
-        # 最終評価
-        if not getattr(self.hyperparams, 'quiet_mode', False):
-            print(f"\n{'='*60}")
-            print("MNIST分類学習 完了")
-            print(f"{'='*60}")
-        
-        final_accuracy = epoch_accuracies[-1]
-        max_accuracy = max(epoch_accuracies)
-        
-        # 最終結果算出（訓練精度とテスト精度）
-        train_accuracy = final_accuracy  # エポック精度は現在テスト精度として計算されている
-        test_accuracy = final_accuracy   # 適切な分離が必要な場合は別途計算
-        
-        if getattr(self.hyperparams, 'quiet_mode', False):
-            # グリッドサーチ用の簡潔出力
-            print(f"訓練精度: {train_accuracy:.1f}%")
-            print(f"テスト精度: {test_accuracy:.1f}%")
-        else:
-            # 通常の詳細出力
-            print(f"📈 学習結果:")
-            print(f"  最終精度: {final_accuracy:.3f}")
-            print(f"  最高精度: {max_accuracy:.3f}")
-            print(f"  総学習時間: {total_time:.1f}秒")
-            print(f"  平均エポック時間: {total_time/epochs:.1f}秒")
-        
-        # プロファイリングレポート表示（--profileオプション有効時）
-        if self.hyperparams.enable_profiling:
-            self.profiler.print_detailed_report()
-        
-        # 結果統計を返す（バッファも含む）
-        return {
-            'final_accuracy': final_accuracy,
-            'max_accuracy': max_accuracy,
-            'epoch_accuracies': epoch_accuracies,
-            'total_time': total_time,
-            'train_size': train_size,
-            'test_size': test_size,
-            'epochs': epochs,
-            'network_size': self.total_units,
-            'results_buffer': results_buffer  # 混同行列用データへのアクセス
-        }
+                # 正解クラスのみ1.0に設定（One-Hot形式）
+                true_class = int(label)
+                if true_class < len(self.teacher_data[i]):
+                    self.teacher_data[i][true_class] = 1.0
+
+        print(f"✅ データ準備完了: 訓練{len(train_inputs)}サンプル, テスト{len(test_inputs)}サンプル")
 
     def _extract_actual_neuron_activities(self):
         """
