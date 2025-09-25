@@ -546,11 +546,11 @@ class RealtimeConfusionMatrixVisualizer:
                     if raw_value > 0:
                         # 色の選択（背景の明度に応じて）
                         color = 'white' if norm_value > 0.5 else 'black'
-                        # 生の数値を表示
-                        self.ax_confusion.text(j, i, str(raw_value), ha='center', va='center',
+                        # 🎯 ed_multi.prompt.md準拠: 統一的整数フォーマット（0埋め無し）
+                        self.ax_confusion.text(j, i, f"{raw_value:d}", ha='center', va='center',
                                               color=color, fontsize=8, weight='bold')
         except Exception as e:
-            print(f"⚠️  数値表示更新エラー: {e}")
+            print(f"⚠️ 数値表示更新エラー: {e}")
                                           
     def _calculate_class_accuracies(self, matrix: np.ndarray) -> np.ndarray:
         """クラス別精度計算"""
