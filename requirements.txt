@@ -1,0 +1,35 @@
+# ED法による多クラス分類 - 必須依存関係
+# ED Multi-Class Classification - Required Dependencies
+
+# 必須パッケージ (Required packages)
+numpy>=1.21.0
+torch>=1.9.0
+torchvision>=0.10.0
+matplotlib>=3.3.0
+
+# オプションパッケージ (Optional packages)
+tqdm>=4.60.0              # 進捗バー表示用 (Progress bar display)
+cupy>=9.0.0               # GPU高速化用 (GPU acceleration) - オプション
+
+# 開発・デバッグ用 (Development and debugging)
+# これらは通常のPython標準ライブラリに含まれています
+# The following are included in Python standard library:
+# - argparse (コマンドライン引数解析)
+# - os (オペレーティングシステム)
+# - time (時間関連)
+# - datetime (日付時間)
+# - math (数学関数)
+# - random (乱数生成)
+# - typing (型ヒント)
+# - collections (コレクション)
+# - threading (マルチスレッド)
+# - warnings (警告)
+
+# インストール例 (Installation example):
+# pip install numpy torch torchvision matplotlib tqdm
+# 
+# GPU高速化（オプション）(GPU acceleration - optional):
+# pip install cupy
+#
+# すべて一括インストール (Install all at once):
+# pip install -r requirements.txt
