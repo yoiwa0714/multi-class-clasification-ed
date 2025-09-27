@@ -2,6 +2,9 @@
 
 金子勇氏の誤差拡散学習法（ED法、1999年）をPythonで忠実に再現し、MNIST/Fashion-MNISTデータセットに対応させた研究実装です。
 
+**📦 最新版**: `multi_ed_v031.py` (v0.3.1) - メモリ最適化・ヒートマップ可視化対応  
+**📦 軽量版**: `multi_ed_simple.py` - 教育・研究用最小実装 (24KB)
+
 ## 🎯 プロジェクト概要
 
 本プロジェクトは、生物学的神経回路網の学習メカニズムを模倣した**誤差拡散学習法（Error Diffusion Learning）**の完全実装です。従来のバックプロパゲーション法とは異なる、アミン濃度による重み更新機構を特徴とします。
@@ -16,11 +19,13 @@
 
 ### v0.3.1 最新機能
 - ✅ **メモリ最適化**: 大規模データセット対応（25,600サンプル → 動的生成）
-- ✅ **リアルタイム可視化**: 学習曲線・混同行列・ニューロン活動の同時表示
-- ✅ **ミニバッチ学習**: バッチサイズ可変対応
-- ✅ **重み保存/読み込み**: 学習済みモデルの永続化
-- ✅ **パフォーマンス計測**: 詳細プロファイリング機能
+- ✅ **リアルタイム可視化**: 学習曲線・混同行列の同時表示
+- ✅ **ニューロンヒートマップ可視化**: 重み・活動状態のリアルタイム表示
+- ✅ **ミニバッチ学習**: バッチサイズ可変対応（デフォルト: 32）
+- ✅ **重み管理システム**: 保存/読み込み/継続学習/テスト専用モード
+- ✅ **パフォーマンスプロファイラ**: 詳細実行時間計測機能
 - ✅ **GPU高速化**: CuPy対応（オプション）
+- ✅ **柔軟な隠れ層設定**: 単層・多層アーキテクチャ対応
 
 ### データセット対応
 - **MNIST**: 手書き数字認識（28×28ピクセル、10クラス）
@@ -61,26 +66,29 @@ pip install cupy
 
 ### 1. 基本実行
 ```bash
-# MNIST分類学習（デフォルト設定）
+# MNIST分類学習（デフォルト設定: 100サンプル、5エポック）
 python multi_ed_v031.py
 
 # Fashion-MNIST分類学習
 python multi_ed_v031.py --fashion
 
-# 可視化付き学習
+# リアルタイム可視化付き学習
 python multi_ed_v031.py --viz --save_fig results
+
+# ヒートマップ可視化付き学習
+python multi_ed_v031.py --viz --heatmap --epochs 10
 ```
 
 ### 2. パラメータ調整
 ```bash
 # 学習率・アミン濃度調整
-python multi_ed_v031.py --ami 0.7 --lr 0.3 --sig 0.5
+python multi_ed_v031.py --amine 0.7 --learning_rate 0.3 --sigmoid 0.5
 
 # データサイズ・エポック数設定
-python multi_ed_v031.py --train 1000 --test 200 --epochs 20
+python multi_ed_v031.py --train_samples 1000 --test_samples 200 --epochs 20
 
 # ミニバッチ学習
-python multi_ed_v031.py --batch 64 --train 2000 --epochs 30
+python multi_ed_v031.py --batch_size 64 --train_samples 2000 --epochs 30
 ```
 
 ### 3. 高度な機能
@@ -99,12 +107,17 @@ python multi_ed_v031.py --profile --verbose
 
 ### 典型的な学習結果
 ```bash
-python multi_ed_v031.py --viz --epochs 30 --train 1000 --test 200
+python multi_ed_v031.py --viz --epochs 30 --train_samples 1000 --test_samples 200
 
-# 期待される精度
-MNIST:         65-75%
-Fashion-MNIST: 55-70%
+# 期待される精度（v0.3.1最適化パラメータ使用時）
+MNIST:         65-75% (デフォルトパラメータ)
+Fashion-MNIST: 55-70% (デフォルトパラメータ)
 ```
+
+### 実行時間パフォーマンス
+- **小規模テスト** (100サンプル、5エポック): 約30秒
+- **中規模学習** (1000サンプル、30エポック): 約10分
+- **GPU加速** (CuPy有効): 約50%高速化
 
 ### メモリ最適化の効果
 - **従来**: 25,600サンプル事前読み込み → メモリ枯渇
@@ -112,19 +125,40 @@ Fashion-MNIST: 55-70%
 
 ## 🔧 コマンドライン オプション
 
+### ED法アルゴリズムパラメータ
 | オプション | 説明 | デフォルト |
 |-----------|------|-----------|
-| `--ami` | 初期アミン濃度 | 0.7 |
-| `--lr` | 学習率 | 0.3 |
-| `--sig` | シグモイド閾値 | 0.5 |
-| `--train` | 訓練データ数 | 1000 |
-| `--test` | テストデータ数 | 200 |
-| `--epochs` | エポック数 | 3 |
-| `--batch` | ミニバッチサイズ | 1 |
+| `--amine`, `--ami` | 初期アミン濃度 | 0.7 |
+| `--learning_rate`, `--lr` | 学習率 | 0.3 |
+| `--sigmoid`, `--sig` | シグモイド閾値 | 0.7 |
+| `--diffusion`, `--dif` | アミン拡散係数 | 0.5 |
+| `--weight1`, `--w1` | 重み初期値1 | 0.3 |
+| `--weight2`, `--w2` | 重み初期値2 | 0.5 |
+
+### 実行時設定パラメータ
+| オプション | 説明 | デフォルト |
+|-----------|------|-----------|
+| `--train_samples`, `--train` | 訓練データ数 | 100 |
+| `--test_samples`, `--test` | テストデータ数 | 100 |
+| `--epochs`, `--epo` | エポック数 | 5 |
+| `--hidden`, `--hid` | 隠れ層構造 | 128 |
+| `--batch_size`, `--batch` | ミニバッチサイズ | 32 |
+| `--seed` | ランダムシード | ランダム |
 | `--viz` | リアルタイム可視化 | OFF |
+| `--heatmap` | ヒートマップ可視化 | OFF |
 | `--fashion` | Fashion-MNIST使用 | OFF |
+| `--save_fig` | 図表保存 | OFF |
+| `--verbose`, `--v` | 詳細表示 | OFF |
+| `--profile`, `--p` | 詳細プロファイリング | OFF |
+| `--cpu` | CPU強制実行モード | OFF |
+
+### 重み管理オプション
+| オプション | 説明 | デフォルト |
+|-----------|------|-----------|
 | `--save_weights` | 重み保存名 | なし |
 | `--load_weights` | 重み読み込み名 | なし |
+| `--test_only` | テスト専用モード | OFF |
+| `--continue_training` | 継続学習モード | OFF |
 
 ## 📈 学習結果の解釈
 
@@ -145,15 +179,16 @@ Fashion-MNIST: 55-70%
 # グリッドサーチ実行例
 for ami in 0.3 0.5 0.7; do
   for lr in 0.1 0.3 0.5; do
-    python multi_ed_v031.py --ami $ami --lr $lr --epochs 20 --save_fig "ami${ami}_lr${lr}"
+    python multi_ed_v031.py --amine $ami --learning_rate $lr --epochs 20 --save_fig "ami${ami}_lr${lr}"
   done
 done
 ```
 
 ### アーキテクチャ研究
 - 隠れ層サイズの影響: `--hidden 64,128,256`
-- ミニバッチサイズの効果: `--batch 1,16,32,64`
+- ミニバッチサイズの効果: `--batch_size 1,16,32,64`
 - 時間ステップの最適化: ソースコード修正
+- ヒートマップ分析: `--viz --heatmap --verbose`
 
 ## 📖 理論的背景
 
