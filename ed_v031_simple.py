@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-純正ED法（Error Diffusion Learning Algorithm）Python実装 v0.3.1 - システム安定性・可視化完全統合版
-Original C implementation by Isamu Kaneko (1999) - Based on ed_multi.prompt.md 100% Compliance Verified v0.3.1
+純正ED法（Error Diffusion Learning Algorithm）Python実装 v0.3.2 - 開発継続版
+Original C implementation by Isamu Kaneko (1999) - Based on ed_multi.prompt.md 100% Compliance Verified v0.3.2
 
 金子勇氏のオリジナルC実装を完全に忠実に再現 + 重み保存・読み込み機能 + パラメータボックス統一表示 + 最適化パラメータ
 
-【v0.3.1 システム安定性・可視化完全統合版 - 2025年9月27日完成】
-Base: v0.3.0 科学的公正性確保版からの継承
-Status: ✅ PRODUCTION READY - 安定版完成（理論準拠・機能完全・システム安定）
-Backup: ed_v030_simple.py (v0.3.0科学的公正性確保版), modules_v030_backup (v0.3.0状態のmodules)
+【v0.3.2 開発継続版 - 2025年9月27日作成】
+Base: v0.3.1 システム安定性・可視化完全統合版からの継承
+Status: 🚧 DEVELOPMENT - v0.3.1の安定基盤上での継続開発版
+Backup: ed_v031_simple.py (v0.3.1完成版), modules_v031_backup (v0.3.1状態のmodules)
 
 🎯 CRITICAL FIXES COMPLETED: システム安定性と可視化システム統合完了
 ✅ 可視化システム修復: --vizフラグによるリアルタイムグラフ表示機能完全復旧
@@ -800,8 +800,9 @@ class EDHeatmapIntegration:
         """ネットワークから呼び出されるヒートマップ更新コールバック"""
         self.update_counter += 1
         
-        # パターンレベルの更新に変更（update_interval制御を削除）
-        self.update_heatmap_if_enabled()
+        # ed_multi.prompt.md準拠: リアルタイム更新間隔制御
+        if self.update_counter % self.update_interval == 0:
+            self.update_heatmap_if_enabled()
     
     def force_update_heatmap(self):
         """強制的にヒートマップを更新（外部から呼び出し可能）"""
@@ -2043,15 +2044,32 @@ def run_classification(hyperparams):
     # ネットワーク作成
     network = EDNetworkMNIST(hyperparams)
 
-    # 🔧 パラメータを正しく渡す（MAX_UNITS問題の修正）
-    results = network.run_classification(
-        enable_visualization=hyperparams.enable_visualization,
-        use_fashion_mnist=hyperparams.fashion_mnist,
-        train_size=hyperparams.train_samples,
-        test_size=hyperparams.test_samples,
-        epochs=hyperparams.epochs,
-        random_state=42
-    )
+    # ヒートマップ統合システム初期化（補助機能として追加）
+    heatmap_integration = None
+    print(f"� デバッグ: enable_heatmap = {hyperparams.enable_heatmap}")
+    if hyperparams.enable_heatmap:
+        print("🎯 ヒートマップ可視化システム初期化中...")
+        heatmap_integration = EDHeatmapIntegration(hyperparams, network)
+
+    # 分類実行
+    try:
+        # 学習開始直前にヒートマップ表示を開始
+        if heatmap_integration:
+            heatmap_integration.start_heatmap_display()
+
+        # �🔧 パラメータを正しく渡す（MAX_UNITS問題の修正）
+        results = network.run_classification(
+            enable_visualization=hyperparams.enable_visualization,
+            use_fashion_mnist=hyperparams.fashion_mnist,
+            train_size=hyperparams.train_samples,
+            test_size=hyperparams.test_samples,
+            epochs=hyperparams.epochs,
+            random_state=42
+        )
+    finally:
+        # ヒートマップ終了処理
+        if heatmap_integration:
+            heatmap_integration.close_heatmap()
 
     # 重み保存のためネットワークインスタンスを結果に追加
     results['network_instance'] = network
